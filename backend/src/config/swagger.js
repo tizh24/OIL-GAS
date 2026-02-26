@@ -29,11 +29,17 @@ const options = {
             }
         }
     },
-    apis: ["./src/routes/*.js"]
+    apis: [path.join(__dirname, "../routes/*.js")]
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
 export const swaggerDocs = (app) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+    app.use("/api-docs", swaggerUi.serveFiles(swaggerSpec), swaggerUi.setup(swaggerSpec, {
+        customSiteTitle: "Oil & Gas API Documentation"
+    }));
+
+    app.get("/api-docs.json", (_req, res) => {
+        res.json(swaggerSpec);
+    });
 };

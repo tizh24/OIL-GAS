@@ -1,13 +1,8 @@
 import app from "../src/app.js";
 import connectDB from "../src/config/db.js";
-
-let isConnected = false;
+import "dotenv/config";
 
 export default async function handler(req, res) {
-    if (!isConnected) {
-        await connectDB();
-        isConnected = true;
-    }
-
+    await connectDB();
     return app(req, res);
 }
