@@ -1,37 +1,6 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
-const options = {
-    definition: {
-        openapi: "3.0.0",
-        info: {
-            title: "Oil & Gas API",
-            version: "1.0.0",
-            description: "RESTful API for Oil & Gas management system"
-        },
-        servers: [
-            {
-                url: "https://oil-gas-omega.vercel.app",
-                description: "Production server"
-            },
-            {
-                url: "http://localhost:3000",
-                description: "Development server"
-            }
-        ],
-        components: {
-            securitySchemes: {
-                bearerAuth: {
-                    type: "http",
-                    scheme: "bearer",
-                    bearerFormat: "JWT"
-                }
-            }
-        }
-    },
-    apis: ["./src/routes/*.js"]
-};
-
 const manualSpec = {
     openapi: "3.0.0",
     info: {
@@ -212,19 +181,73 @@ const manualSpec = {
     }
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+const options = {
+    definition: {
+        openapi: "3.0.0",
+        info: {
+            title: "Oil & Gas API",
+            version: "1.0.0",
+            description: "RESTful API for Oil & Gas management system",
+        },
+        servers: [
+            {
+                url: process.env.NODE_ENV === 'production'
+                    ? "https://oil-gas-omega.vercel.app"
+                    : "http://localhost:3000",
+                description: process.env.NODE_ENV === 'production' ? "Production server" : "Development server"
+            }
+        ],
+        components: {
+            securitySchemes: {
+                bearerAuth: {
+                    type: "http",
+                    scheme: "bearer",
+                    bearerFormat: "JWT",
+                },
+            },
+        },
+    },
+    apis: ["./src/routes/*.js", "./routes/*.js", "../routes/*.js"],
+};
 
-export const swaggerDocs = (app) => {
-    // Use manual spec as fallback for Vercel deployment
-    const finalSpec = swaggerSpec.paths && Object.keys(swaggerSpec.paths).length > 0
-        ? swaggerSpec
-        : manualSpec;
+export const setupSwagger = (app) => {
+    try {
+        console.log("Setting up Swagger documentation...");
 
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(finalSpec, {
-        customSiteTitle: "Oil & Gas API Documentation"
-    }));
+        // Try to generate spec from route files
+        let swaggerSpec;
+        try {
+            swaggerSpec = swaggerJsdoc(options);
+            console.log("Swagger spec generated from route files");
+        } catch (error) {
+            console.log("Failed to generate spec from route files, using manual spec:", error.message);
+            swaggerSpec = manualSpec;
+        }
 
-    app.get("/api-docs.json", (_req, res) => {
-        res.json(finalSpec);
-    });
+        // Check if the spec has any paths
+        if (!swaggerSpec.paths || Object.keys(swaggerSpec.paths).length === 0) {
+            console.log("No paths found in generated spec, using manual specification");
+            swaggerSpec = manualSpec;
+        }
+
+        console.log("Final swagger spec paths:", Object.keys(swaggerSpec.paths || {}));
+
+        // Serve swagger docs
+        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+        app.get("/api-docs.json", (req, res) => {
+            res.setHeader("Content-Type", "application/json");
+            res.send(swaggerSpec);
+        });
+
+        console.log("Swagger documentation available at /api-docs");
+    } catch (error) {
+        console.error("Error setting up Swagger:", error);
+
+        // Fallback to manual spec in case of any error
+        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(manualSpec));
+        app.get("/api-docs.json", (req, res) => {
+            res.setHeader("Content-Type", "application/json");
+            res.send(manualSpec);
+        });
+    }
 };
