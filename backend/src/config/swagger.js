@@ -1,6 +1,7 @@
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 
+// Manual specification for Vercel deployment
 const manualSpec = {
     openapi: "3.0.0",
     info: {
@@ -28,10 +29,11 @@ const manualSpec = {
         }
     },
     paths: {
-        "/api/auth/register": {
+        "/api/auth/login": {
             post: {
                 tags: ["Authentication"],
-                summary: "Register a new user",
+                summary: "User login",
+                description: "Authenticate user and get access tokens",
                 requestBody: {
                     required: true,
                     content: {
@@ -40,12 +42,14 @@ const manualSpec = {
                                 type: "object",
                                 required: ["email", "password"],
                                 properties: {
-                                    email: { type: "string", format: "email" },
-                                    password: { type: "string", minLength: 6 },
-                                    role: {
+                                    email: {
                                         type: "string",
-                                        enum: ["admin", "engineer", "supervisor"],
-                                        default: "engineer"
+                                        format: "email",
+                                        example: "user@example.com"
+                                    },
+                                    password: {
+                                        type: "string",
+                                        example: "password123"
                                     }
                                 }
                             }
@@ -53,67 +57,18 @@ const manualSpec = {
                     }
                 },
                 responses: {
-                    200: { description: "User registered successfully" },
-                    400: { description: "User already exists" },
-                    500: { description: "Registration failed" }
-                }
-            }
-        },
-        "/api/auth/login": {
-            post: {
-                tags: ["Authentication"],
-                summary: "Login user",
-                requestBody: {
-                    required: true,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                required: ["email", "password"],
-                                properties: {
-                                    email: { type: "string", format: "email" },
-                                    password: { type: "string" }
-                                }
-                            }
-                        }
-                    }
-                },
-                responses: {
                     200: { description: "Login successful" },
+                    400: { description: "Email and password are required" },
                     401: { description: "Invalid credentials" },
                     500: { description: "Login failed" }
-                }
-            }
-        },
-        "/api/auth/refresh": {
-            post: {
-                tags: ["Authentication"],
-                summary: "Refresh access token",
-                requestBody: {
-                    required: true,
-                    content: {
-                        "application/json": {
-                            schema: {
-                                type: "object",
-                                required: ["refreshToken"],
-                                properties: {
-                                    refreshToken: { type: "string" }
-                                }
-                            }
-                        }
-                    }
-                },
-                responses: {
-                    200: { description: "Token refreshed" },
-                    401: { description: "Invalid refresh token" },
-                    500: { description: "Token refresh failed" }
                 }
             }
         },
         "/api/auth/logout": {
             post: {
                 tags: ["Authentication"],
-                summary: "Logout user",
+                summary: "User logout",
+                description: "Invalidate refresh token and logout user",
                 requestBody: {
                     required: true,
                     content: {
@@ -122,7 +77,10 @@ const manualSpec = {
                                 type: "object",
                                 required: ["refreshToken"],
                                 properties: {
-                                    refreshToken: { type: "string" }
+                                    refreshToken: {
+                                        type: "string",
+                                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                    }
                                 }
                             }
                         }
@@ -130,7 +88,8 @@ const manualSpec = {
                 },
                 responses: {
                     200: { description: "Logged out successfully" },
-                    400: { description: "Refresh token required" },
+                    400: { description: "Refresh token is required" },
+                    404: { description: "Refresh token not found" },
                     500: { description: "Logout failed" }
                 }
             }
@@ -139,16 +98,18 @@ const manualSpec = {
             get: {
                 tags: ["Users"],
                 summary: "Get all users",
+                description: "Retrieve a list of all users (requires authentication)",
                 security: [{ bearerAuth: [] }],
                 responses: {
                     200: { description: "Users retrieved successfully" },
-                    401: { description: "Unauthorized" },
+                    401: { description: "Unauthorized - Invalid or missing token" },
                     500: { description: "Failed to retrieve users" }
                 }
             },
             post: {
-                tags: ["Users"],
+                tags: ["Admin"],
                 summary: "Create new user",
+                description: "Create a new user account (admin only)",
                 security: [{ bearerAuth: [] }],
                 requestBody: {
                     required: true,
@@ -158,12 +119,21 @@ const manualSpec = {
                                 type: "object",
                                 required: ["email", "password"],
                                 properties: {
-                                    email: { type: "string", format: "email" },
-                                    password: { type: "string", minLength: 6 },
+                                    email: {
+                                        type: "string",
+                                        format: "email",
+                                        example: "newuser@example.com"
+                                    },
+                                    password: {
+                                        type: "string",
+                                        minLength: 6,
+                                        example: "securepassword123"
+                                    },
                                     role: {
                                         type: "string",
                                         enum: ["admin", "engineer", "supervisor"],
-                                        default: "engineer"
+                                        default: "engineer",
+                                        example: "engineer"
                                     }
                                 }
                             }
@@ -172,8 +142,9 @@ const manualSpec = {
                 },
                 responses: {
                     200: { description: "User created successfully" },
-                    400: { description: "User already exists" },
-                    401: { description: "Unauthorized" },
+                    400: { description: "User already exists or invalid input" },
+                    401: { description: "Unauthorized - Invalid or missing token" },
+                    403: { description: "Forbidden - Admin access required" },
                     500: { description: "Failed to create user" }
                 }
             }
@@ -186,68 +157,39 @@ const options = {
         openapi: "3.0.0",
         info: {
             title: "Oil & Gas API",
-            version: "1.0.0",
-            description: "RESTful API for Oil & Gas management system",
+            version: "1.0.0"
         },
-        servers: [
-            {
-                url: process.env.NODE_ENV === 'production'
-                    ? "https://oil-gas-omega.vercel.app"
-                    : "http://localhost:3000",
-                description: process.env.NODE_ENV === 'production' ? "Production server" : "Development server"
-            }
-        ],
         components: {
             securitySchemes: {
                 bearerAuth: {
                     type: "http",
                     scheme: "bearer",
-                    bearerFormat: "JWT",
-                },
-            },
-        },
+                    bearerFormat: "JWT"
+                }
+            }
+        }
     },
-    apis: ["./src/routes/*.js", "./routes/*.js", "../routes/*.js"],
+    apis: ["./src/routes/*.js"]
 };
 
-export const setupSwagger = (app) => {
+export const swaggerDocs = (app) => {
+    let swaggerSpec;
+
     try {
-        console.log("Setting up Swagger documentation...");
+        // Try to generate from route files
+        swaggerSpec = swaggerJsdoc(options);
 
-        // Try to generate spec from route files
-        let swaggerSpec;
-        try {
-            swaggerSpec = swaggerJsdoc(options);
-            console.log("Swagger spec generated from route files");
-        } catch (error) {
-            console.log("Failed to generate spec from route files, using manual spec:", error.message);
-            swaggerSpec = manualSpec;
-        }
-
-        // Check if the spec has any paths
+        // If no paths found, use manual spec
         if (!swaggerSpec.paths || Object.keys(swaggerSpec.paths).length === 0) {
-            console.log("No paths found in generated spec, using manual specification");
+            console.log("Using manual specification for Swagger");
             swaggerSpec = manualSpec;
         }
-
-        console.log("Final swagger spec paths:", Object.keys(swaggerSpec.paths || {}));
-
-        // Serve swagger docs
-        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-        app.get("/api-docs.json", (req, res) => {
-            res.setHeader("Content-Type", "application/json");
-            res.send(swaggerSpec);
-        });
-
-        console.log("Swagger documentation available at /api-docs");
     } catch (error) {
-        console.error("Error setting up Swagger:", error);
-
-        // Fallback to manual spec in case of any error
-        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(manualSpec));
-        app.get("/api-docs.json", (req, res) => {
-            res.setHeader("Content-Type", "application/json");
-            res.send(manualSpec);
-        });
+        console.log("Using manual specification due to error:", error.message);
+        swaggerSpec = manualSpec;
     }
+
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+        customSiteTitle: "Oil & Gas API Documentation"
+    }));
 };
