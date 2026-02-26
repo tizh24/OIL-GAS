@@ -1,22 +1,25 @@
 import mongoose from "mongoose";
 
-const MONGODB_URI = process.env.MONGODB_URI;
-
-let cached = global.mongoose;
-
-if (!cached) {
-    cached = global.mongoose = { conn: null, promise: null };
-}
-
 const connectDB = async () => {
-    if (cached.conn) return cached.conn;
-
-    if (!cached.promise) {
-        cached.promise = mongoose.connect(MONGODB_URI);
+    if (!process.env.MONGODB_URI) {
+        throw new Error("MONGODB_URI is not set");
     }
 
-    cached.conn = await cached.promise;
-    return cached.conn;
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
+    }
+
+    if (mongoose.connection.readyState === 2) {
+        return mongoose.connection;
+    }
+
+    try {
+        await mongoose.connect(process.env.MONGODB_URI);
+        return mongoose.connection;
+    } catch (error) {
+        console.error("MongoDB error:", error.message);
+        throw error;
+    }
 };
 
 export default connectDB;
