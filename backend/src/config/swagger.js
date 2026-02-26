@@ -40,7 +40,7 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 export const swaggerDocs = (app) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    app.use("/api-docs", swaggerUi.serveFiles(swaggerSpec), swaggerUi.setup(swaggerSpec, {
         customSiteTitle: "Oil & Gas API Documentation"
     }));
 
