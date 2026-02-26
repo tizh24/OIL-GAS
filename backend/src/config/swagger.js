@@ -1,5 +1,5 @@
-import swaggerJsdoc from "swagger-jsdoc";
-import swaggerUi from "swagger-ui-express";
+// import swaggerJsdoc from "swagger-jsdoc";
+// import swaggerUi from "swagger-ui-express";
 
 // // Manual specification for Vercel deployment
 // const manualSpec = {
@@ -194,6 +194,14 @@ import swaggerUi from "swagger-ui-express";
 //     }));
 // };
 
+import path from "path";
+import { fileURLToPath } from "url";
+import swaggerJsdoc from "swagger-jsdoc";
+import swaggerUi from "swagger-ui-express";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const options = {
     definition: {
         openapi: "3.0.0",
@@ -204,7 +212,7 @@ const options = {
         },
         servers: [
             {
-                url: "http://localhost:3000",
+                url: "http://localhost:3000"
             }
         ],
         components: {
@@ -217,7 +225,7 @@ const options = {
             }
         }
     },
-    apis: ["../routes/*.js"]
+    apis: [path.join(__dirname, "../routes/*.js")] // ✅ chuẩn tuyệt đối
 };
 
 const swaggerSpec = swaggerJsdoc(options);
