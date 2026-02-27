@@ -9,12 +9,17 @@ import { success, error } from "../utils/response.js";
 
 export const register = async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        const { email, password, role, name, phone, department } = req.body;
 
         // Check if user exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return error(res, 400, "User already exists");
+        }
+
+        // Validate required fields
+        if (!name) {
+            return error(res, 400, "Name is required");
         }
 
         // Hash password
@@ -23,7 +28,11 @@ export const register = async (req, res) => {
         const user = await User.create({
             email,
             password: hashedPassword,
-            role: role || 'engineer'
+            role: role || 'engineer',
+            name,
+            phone,
+            department,
+            status: 'active'
         });
 
         // Generate tokens
@@ -40,7 +49,12 @@ export const register = async (req, res) => {
             user: {
                 id: user._id,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                name: user.name,
+                phone: user.phone,
+                department: user.department,
+                status: user.status,
+                createdAt: user.createdAt
             },
             accessToken,
             refreshToken
@@ -75,13 +89,16 @@ export const login = async (req, res) => {
             user: user._id,
             token: refreshToken,
             expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
-        });
-
-        return success(res, "Login successful", {
+        }); return success(res, "Login successful", {
             user: {
                 id: user._id,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                name: user.name,
+                phone: user.phone,
+                department: user.department,
+                status: user.status,
+                createdAt: user.createdAt
             },
             accessToken,
             refreshToken

@@ -12,6 +12,7 @@ const router = express.Router();
  *       required:
  *         - email
  *         - password
+ *         - name
  *       properties:
  *         email:
  *           type: string
@@ -21,9 +22,18 @@ const router = express.Router();
  *           type: string
  *           minLength: 6
  *           example: "password123"
+ *         name:
+ *           type: string
+ *           example: "John Engineer"
+ *         phone:
+ *           type: string
+ *           example: "+1234567890"
+ *         department:
+ *           type: string
+ *           example: "Oil & Gas Engineering"
  *         role:
  *           type: string
- *           enum: [admin, engineer, supervisor]
+ *           enum: ["admin", "engineer", "supervisor"]
  *           default: engineer
  *           example: "engineer"
  *     UserLogin:

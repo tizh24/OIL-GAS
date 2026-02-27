@@ -19,15 +19,33 @@ const router = express.Router();
  *           type: string
  *           format: email
  *           example: "user@example.com"
+ *         name:
+ *           type: string
+ *           example: "John Engineer"
+ *         phone:
+ *           type: string
+ *           example: "+1234567890"
+ *         department:
+ *           type: string
+ *           example: "Oil & Gas Engineering"
+ *         status:
+ *           type: string
+ *           enum: ["active", "inactive"]
+ *           example: "active"
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *           example: "2024-01-01T00:00:00Z"
  *         role:
  *           type: string
- *           enum: [admin, engineer, supervisor]
+ *           enum: ["admin", "engineer", "supervisor"]
  *           example: "engineer"
  *     CreateUser:
  *       type: object
  *       required:
  *         - email
  *         - password
+ *         - name
  *       properties:
  *         email:
  *           type: string
@@ -37,6 +55,15 @@ const router = express.Router();
  *           type: string
  *           minLength: 6
  *           example: "securepassword123"
+ *         name:
+ *           type: string
+ *           example: "John Engineer"
+ *         phone:
+ *           type: string
+ *           example: "+1234567890"
+ *         department:
+ *           type: string
+ *           example: "Oil & Gas Engineering"
  *         role:
  *           type: string
  *           enum: [admin, engineer, supervisor]

@@ -5,7 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "migrate:rbac": "node scripts/migrate-rbac.js",
+    "validate:rbac": "node scripts/validate-rbac.js",
+    "rollback:rbac": "node -e \"import('./scripts/migrate-rbac.js').then(m => m.rollbackMigration())\""
   },
   "keywords": [],
   "author": "",

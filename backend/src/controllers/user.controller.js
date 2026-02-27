@@ -13,12 +13,17 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
     try {
-        const { email, password, role } = req.body;
+        const { email, password, role, name, phone, department } = req.body;
 
         // Check if user exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return error(res, 400, "User already exists");
+        }
+
+        // Validate required fields
+        if (!name) {
+            return error(res, 400, "Name is required");
         }
 
         // Hash password
@@ -27,7 +32,11 @@ export const createUser = async (req, res) => {
         const user = await User.create({
             email,
             password: hashedPassword,
-            role: role || 'engineer'
+            role: role || 'engineer',
+            name,
+            phone,
+            department,
+            status: 'active'
         });
 
         // Remove password from response
