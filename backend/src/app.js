@@ -5,6 +5,7 @@ import { swaggerDocs } from "./config/swagger.js";
 import authRoutes from "./routes/auth.route.js";
 import engineerRoutes from "./routes/engineer/profile.routes.js";
 import equipmentRoutes from "./routes/engineer/equipment.routes.js";
+import instrumentRoutes from "./routes/engineer/instrument.routes.js";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/engineer", engineerRoutes);
 app.use("/api/engineer/equipment", equipmentRoutes);
+app.use("/api/engineer/instruments", instrumentRoutes);
 
 swaggerDocs(app);
 
