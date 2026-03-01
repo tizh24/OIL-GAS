@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
     }, password: {
         type: String,
         required: true,
-        select: false  // Hide password by default
+        select: false
     },
     name: {
         type: String,
@@ -41,19 +41,9 @@ const userSchema = new mongoose.Schema({
         default: null
     }
 }, {
-    timestamps: true // This adds createdAt and updatedAt automatically
+    timestamps: true
 });
 
-// Add soft delete middleware - tạm thời comment để debug
-// userSchema.pre(/^find/, function(next) {
-//     // Chỉ filter deleted users nếu không có select password
-//     if (!this.getOptions().select || !this.getOptions().select.includes('+password')) {
-//         this.find({ deletedAt: { $eq: null } });
-//     }
-//     next();
-// });
-
-// Instance method for soft delete
 userSchema.methods.softDelete = function (deletedByUserId) {
     this.deletedAt = new Date();
     this.deletedBy = deletedByUserId;
@@ -61,12 +51,10 @@ userSchema.methods.softDelete = function (deletedByUserId) {
     return this.save();
 };
 
-// Static method to find deleted users
 userSchema.statics.findDeleted = function () {
     return this.find({ deletedAt: { $ne: null } });
 };
 
-// Static method to find with deleted users
 userSchema.statics.findWithDeleted = function () {
     return this.find({});
 };

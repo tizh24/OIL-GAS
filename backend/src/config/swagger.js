@@ -34,7 +34,10 @@ const options = {
             }
         }
     },
-    apis: [path.join(__dirname, "../routes/*.js")] // ✅ chuẩn tuyệt đối
+    apis: [
+        path.join(__dirname, "../routes/*.js"),
+        path.join(__dirname, "../routes/engineer/*.js")
+    ]
 };
 
 const swaggerSpec = swaggerJsdoc(options);

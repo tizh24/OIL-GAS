@@ -3,6 +3,7 @@ import cors from "cors";
 import userRoutes from "./routes/user.route.js";
 import { swaggerDocs } from "./config/swagger.js";
 import authRoutes from "./routes/auth.route.js";
+import engineerRoutes from "./routes/engineer/profile.routes.js";
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/engineer", engineerRoutes);
 
 swaggerDocs(app);
 
