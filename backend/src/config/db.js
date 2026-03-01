@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const connectDB = async () => {
     if (!process.env.MONGODB_URI) {
+        console.error("MONGODB_URI is not set in environment");
         throw new Error("MONGODB_URI is not set");
     }
 
@@ -14,10 +15,11 @@ const connectDB = async () => {
     }
 
     try {
-        await mongoose.connect(process.env.MONGODB_URI);
+        const conn = await mongoose.connect(process.env.MONGODB_URI);
+        console.log(`MongoDB Connected: ${conn.connection.host}`);
         return mongoose.connection;
     } catch (error) {
-        console.error("MongoDB error:", error.message);
+        console.error("MongoDB connection error:", error.message);
         throw error;
     }
 };

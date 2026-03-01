@@ -72,14 +72,24 @@ export const login = async (req, res) => {
             return error(res, 400, "Email and password are required");
         }
 
-        const user = await User.findOne({ email });
+        // Explicitly select password field (might be excluded by default)
+        const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return error(res, 401, "Invalid credentials");
         }
 
         const ok = await bcrypt.compare(password, user.password);
+
         if (!ok) {
             return error(res, 401, "Invalid credentials");
+        }
+
+        // Check if user is soft deleted
+        if (user.deletedAt) {
+            return error(res, 401, "Account is deactivated");
+        }        // Check user status
+        if (user.status === 'inactive') {
+            return error(res, 401, "Account is inactive");
         }
 
         const accessToken = generateAccessToken(user);
@@ -88,8 +98,10 @@ export const login = async (req, res) => {
         await RefreshToken.create({
             user: user._id,
             token: refreshToken,
-            expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
-        }); return success(res, "Login successful", {
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        });
+
+        return success(res, "Login successful", {
             user: {
                 id: user._id,
                 email: user.email,
@@ -104,7 +116,7 @@ export const login = async (req, res) => {
             refreshToken
         });
     } catch (err) {
-        return error(res, 500, "Login failed");
+        return error(res, 500, "Login failed", err.message);
     }
 };
 
