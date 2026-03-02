@@ -28,7 +28,7 @@ const router = express.Router();
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *       - in: query
  *         name: quality
  *         schema:
@@ -168,7 +168,7 @@ router.get("/instruments/:id/visualize", authenticateToken, requireRole(["engine
  *         required: true
  *         schema:
  *           type: string
- *         description: Equipment ID (ObjectId)
+ *         description: Equipment ID (Numeric)
  *       - in: query
  *         name: includeHistory
  *         schema:
@@ -344,7 +344,7 @@ router.get("/equipment/:id", authenticateToken, requireRole(["engineer", "superv
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     requestBody:
  *       required: true
  *       content:
@@ -414,7 +414,7 @@ router.put("/instruments/:id/settings", authenticateToken, requireRole(["enginee
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     requestBody:
  *       required: true
  *       content:
@@ -515,7 +515,7 @@ router.post("/instruments/:id/training", authenticateToken, requireRole(["engine
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     requestBody:
  *       required: true
  *       content:
@@ -616,7 +616,7 @@ router.post("/instruments/:id/upload", authenticateToken, requireRole(["engineer
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     responses:
  *       200:
  *         description: 3D model status retrieved successfully
@@ -687,7 +687,7 @@ router.get("/instruments/:id/status", authenticateToken, requireRole(["engineer"
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *       - in: query
  *         name: optimized
  *         schema:

@@ -113,7 +113,7 @@ router.get("/", authenticateToken, requireRole(["engineer", "supervisor", "admin
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     responses:
  *       200:
  *         description: Instrument detail retrieved successfully
@@ -157,7 +157,7 @@ router.get("/:id", authenticateToken, requireRole(["engineer", "supervisor", "ad
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     responses:
  *       200:
  *         description: Instrument info retrieved successfully for 3D simulator
@@ -201,7 +201,7 @@ router.get("/:id/info", authenticateToken, requireRole(["engineer", "supervisor"
  *         required: true
  *         schema:
  *           type: string
- *         description: Instrument ID (ObjectId)
+ *         description: Instrument ID (Numeric)
  *     requestBody:
  *       required: true
  *       content:

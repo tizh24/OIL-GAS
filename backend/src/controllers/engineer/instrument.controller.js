@@ -1,7 +1,6 @@
 import Instrument from "../../models/engineer/instrument.model.js";
 import MaintenanceRecord from "../../models/engineer/maintenanceRecord.model.js";
 import { success, error } from "../../utils/response.js";
-import mongoose from "mongoose";
 
 // Get instrument list with filters and pagination
 export const getInstrumentList = async (req, res) => {
@@ -66,14 +65,15 @@ export const getInstrumentDetail = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
         // Find instrument and check if not deleted
         const instrument = await Instrument.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         })
             .populate('assignedEngineers.engineer', 'name email department role')
@@ -82,13 +82,11 @@ export const getInstrumentDetail = async (req, res) => {
 
         if (!instrument) {
             return error(res, 404, "Instrument not found");
-        }
-
-        // Get maintenance summary
+        }        // Get maintenance summary
         const maintenanceSummary = await MaintenanceRecord.aggregate([
             {
                 $match: {
-                    equipment: new mongoose.Types.ObjectId(id),
+                    equipment: numericId,
                     deletedAt: null
                 }
             },
@@ -125,14 +123,15 @@ export const getInstrumentInfo = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
         // Find instrument with specific fields for 3D simulator
         const instrument = await Instrument.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         }, {
             name: 1,
@@ -161,8 +160,9 @@ export const scheduleInstrumentMaintenance = async (req, res) => {
         const { id } = req.params;
         const { type, description, startDate, estimatedHours, priority = "medium" } = req.body;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
@@ -186,21 +186,17 @@ export const scheduleInstrumentMaintenance = async (req, res) => {
             if (type !== "emergency" && scheduledDate < new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
                 return error(res, 400, "Start date must be at least 24 hours in the future for non-emergency maintenance");
             }
-        }
-
-        // Check if instrument exists and not deleted
+        }        // Check if instrument exists and not deleted
         const instrument = await Instrument.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         });
 
         if (!instrument) {
             return error(res, 404, "Instrument not found");
-        }
-
-        // Check if there's already scheduled maintenance
+        }        // Check if there's already scheduled maintenance
         const existingMaintenance = await MaintenanceRecord.findOne({
-            equipment: id,
+            equipment: numericId,
             scheduledDate: {
                 $gte: new Date(scheduledDate.getTime() - 2 * 60 * 60 * 1000), // 2 hours before
                 $lte: new Date(scheduledDate.getTime() + 2 * 60 * 60 * 1000)  // 2 hours after
@@ -215,7 +211,7 @@ export const scheduleInstrumentMaintenance = async (req, res) => {
 
         // Create maintenance record
         const maintenanceRecord = await MaintenanceRecord.create({
-            equipment: id,
+            equipment: numericId,
             type,
             description,
             scheduledDate,

@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
+import Counter from "../counter.model.js";
 
 const instrumentSchema = new mongoose.Schema({
+    _id: {
+        type: Number,
+        unique: true
+    },
     name: {
         type: String,
         required: true,
@@ -83,10 +88,9 @@ const instrumentSchema = new mongoose.Schema({
         fileSize: Number,
         uploadedAt: Date,
         version: String
-    },
-    assignedEngineers: [{
+    }, assignedEngineers: [{
         engineer: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Number,
             ref: "User",
             required: true
         },
@@ -104,7 +108,7 @@ const instrumentSchema = new mongoose.Schema({
         date: Date,
         type: String,
         performedBy: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Number,
             ref: "User"
         },
         notes: String,
@@ -122,14 +126,13 @@ const instrumentSchema = new mongoose.Schema({
         filePath: String,
         uploadedAt: Date,
         version: String
-    }],
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
+    }], createdBy: {
+        type: Number,
         ref: "User",
         required: true
     },
     updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User"
     },
     deletedAt: {
@@ -137,12 +140,21 @@ const instrumentSchema = new mongoose.Schema({
         default: null
     },
     deletedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: 'User',
         default: null
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    _id: false
+});
+
+// Pre-save hook to generate sequential ID
+instrumentSchema.pre('save', async function (next) {
+    if (this.isNew) {
+        this._id = await Counter.getNextSequenceValue('instrument');
+    }
+    next();
 });
 
 // Indexes for efficient querying

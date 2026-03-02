@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
+import Counter from "../counter.model.js";
 
 const equipmentSchema = new mongoose.Schema({
+    _id: {
+        type: Number,
+        unique: true
+    },
     name: {
         type: String,
         required: true,
@@ -60,12 +65,11 @@ const equipmentSchema = new mongoose.Schema({
     },
     warrantyExpiry: {
         type: Date
-    },
-    lastMaintenance: {
+    }, lastMaintenance: {
         date: Date,
         type: String,
         performedBy: {
-            type: mongoose.Schema.Types.ObjectId,
+            type: Number,
             ref: "User"
         },
         notes: String
@@ -74,16 +78,16 @@ const equipmentSchema = new mongoose.Schema({
         type: Date
     },
     assignedTo: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User"
     },
     createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User",
         required: true
     },
     updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User"
     },
     deletedAt: {
@@ -91,12 +95,21 @@ const equipmentSchema = new mongoose.Schema({
         default: null
     },
     deletedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: 'User',
         default: null
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    _id: false
+});
+
+// Pre-save hook to generate sequential ID
+equipmentSchema.pre('save', async function (next) {
+    if (this.isNew) {
+        this._id = await Counter.getNextSequenceValue('equipment');
+    }
+    next();
 });
 
 // Indexes for efficient querying

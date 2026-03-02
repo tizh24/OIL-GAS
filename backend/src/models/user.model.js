@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
+import Counter from "./counter.model.js";
 
 const userSchema = new mongoose.Schema({
+    _id: {
+        type: Number,
+        unique: true
+    },
     email: {
         type: String,
         unique: true,
@@ -36,12 +41,21 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     deletedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: 'User',
         default: null
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    _id: false
+});
+
+// Pre-save hook to generate sequential ID
+userSchema.pre('save', async function (next) {
+    if (this.isNew) {
+        this._id = await Counter.getNextSequenceValue('user');
+    }
+    next();
 });
 
 userSchema.methods.softDelete = function (deletedByUserId) {

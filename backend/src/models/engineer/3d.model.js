@@ -1,9 +1,14 @@
 import mongoose from "mongoose";
+import Counter from "../counter.model.js";
 
 // 3D Visualization Settings Schema
 const threeDVisualizationSchema = new mongoose.Schema({
+    _id: {
+        type: Number,
+        unique: true
+    },
     instrumentId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "Instrument",
         required: true,
         index: true
@@ -338,9 +343,8 @@ const threeDVisualizationSchema = new mongoose.Schema({
         visible: {
             type: Boolean,
             default: true
-        },
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
+        }, createdBy: {
+            type: Number,
             ref: "User"
         },
         createdAt: {
@@ -354,7 +358,7 @@ const threeDVisualizationSchema = new mongoose.Schema({
         sessions: [{
             sessionId: String,
             userId: {
-                type: mongoose.Schema.Types.ObjectId,
+                type: Number,
                 ref: "User"
             },
             startTime: {
@@ -413,9 +417,8 @@ const threeDVisualizationSchema = new mongoose.Schema({
             type: Date,
             default: Date.now
         },
-        changes: [String],
-        author: {
-            type: mongoose.Schema.Types.ObjectId,
+        changes: [String], author: {
+            type: Number,
             ref: "User"
         }
     }],
@@ -433,12 +436,12 @@ const threeDVisualizationSchema = new mongoose.Schema({
 
     // Audit Fields
     createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User",
         required: true
     },
     updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User"
     },
     lastAccessed: {
@@ -452,7 +455,16 @@ const threeDVisualizationSchema = new mongoose.Schema({
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toObject: { virtuals: true },
+    _id: false
+});
+
+// Pre-save hook to generate sequential ID
+threeDVisualizationSchema.pre('save', async function (next) {
+    if (this.isNew) {
+        this._id = await Counter.getNextSequenceValue('threeDVisualization');
+    }
+    next();
 });
 
 // Indexes for performance

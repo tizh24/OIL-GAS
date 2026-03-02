@@ -1,7 +1,6 @@
 import Equipment from "../../models/engineer/equipment.model.js";
 import MaintenanceRecord from "../../models/engineer/maintenanceRecord.model.js";
 import { success, error } from "../../utils/response.js";
-import mongoose from "mongoose";
 
 // Get equipment list with filters and pagination
 export const getEquipmentList = async (req, res) => {
@@ -66,14 +65,15 @@ export const getEquipmentDetail = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid equipment ID");
         }
 
         // Find equipment and check if not deleted
         const equipment = await Equipment.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         })
             .populate('assignedTo createdBy updatedBy', 'name email department')
@@ -87,7 +87,7 @@ export const getEquipmentDetail = async (req, res) => {
         const maintenanceSummary = await MaintenanceRecord.aggregate([
             {
                 $match: {
-                    equipment: new mongoose.Types.ObjectId(id),
+                    equipment: numericId,
                     deletedAt: null
                 }
             },
@@ -125,14 +125,15 @@ export const getEquipmentMaintenanceHistory = async (req, res) => {
         const { id } = req.params;
         const { startDate, endDate, page = 1, limit = 20 } = req.query;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid equipment ID");
         }
 
         // Check if equipment exists and not deleted
         const equipment = await Equipment.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         });
 
@@ -155,15 +156,13 @@ export const getEquipmentMaintenanceHistory = async (req, res) => {
         // Build filter options
         const filterOptions = {};
         if (startDate) filterOptions.startDate = startDate;
-        if (endDate) filterOptions.endDate = endDate;
-
-        // Get maintenance history
-        const maintenanceRecords = await MaintenanceRecord.findByEquipment(id, filterOptions)
+        if (endDate) filterOptions.endDate = endDate;        // Get maintenance history
+        const maintenanceRecords = await MaintenanceRecord.findByEquipment(numericId, filterOptions)
             .skip((pageNum - 1) * limitNum)
             .limit(limitNum);
 
         // Get total count
-        const query = { equipment: id, deletedAt: null };
+        const query = { equipment: numericId, deletedAt: null };
         if (startDate || endDate) {
             query.scheduledDate = {};
             if (startDate) query.scheduledDate.$gte = new Date(startDate);

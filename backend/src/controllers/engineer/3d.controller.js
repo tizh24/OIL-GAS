@@ -1,7 +1,6 @@
 import ThreeDVisualization from "../../models/engineer/3d.model.js";
 import Instrument from "../../models/engineer/instrument.model.js";
 import { success, error } from "../../utils/response.js";
-import mongoose from "mongoose";
 
 // 4.1 Visualize 3D Instrument - GET /3d/instruments/{id}/visualize
 export const visualize3DInstrument = async (req, res) => {
@@ -9,28 +8,27 @@ export const visualize3DInstrument = async (req, res) => {
         const { id } = req.params;
         const { quality, lighting, controls } = req.query;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
         // Find the instrument first
         const instrument = await Instrument.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         });
 
         if (!instrument) {
             return error(res, 404, "Instrument not found");
-        }
-
-        // Find or create 3D visualization configuration
-        let visualization = await ThreeDVisualization.findByInstrument(id);
+        }        // Find or create 3D visualization configuration
+        let visualization = await ThreeDVisualization.findByInstrument(numericId);
 
         if (!visualization) {
             // Create default visualization if none exists
             visualization = await ThreeDVisualization.create({
-                instrumentId: id,
+                instrumentId: numericId,
                 model: {
                     fileName: `${instrument.name.replace(/\s+/g, '_')}_model.gltf`,
                     filePath: `/models/instruments/${instrument.type}/`,
@@ -107,14 +105,15 @@ export const getEquipmentControlInfo = async (req, res) => {
         const { id } = req.params;
         const { includeHistory = false } = req.query;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid equipment ID");
         }
 
         // Find equipment (could be instrument or other equipment)
         const equipment = await Instrument.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         }).populate('assignedEngineers.engineer', 'name email department phone');
 
@@ -248,13 +247,14 @@ export const update3DVisualizationSettings = async (req, res) => {
         const { id } = req.params;
         const { visualization, interactiveElements, metadata } = req.body;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
         // Find existing visualization
-        let threeDConfig = await ThreeDVisualization.findByInstrument(id);
+        let threeDConfig = await ThreeDVisualization.findByInstrument(numericId);
 
         if (!threeDConfig) {
             return error(res, 404, "3D visualization not found");
@@ -293,12 +293,13 @@ export const addTrainingSession = async (req, res) => {
             sessionId: `session_${Date.now()}_${req.user.userId}`
         };
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
-        const visualization = await ThreeDVisualization.findByInstrument(id);
+        const visualization = await ThreeDVisualization.findByInstrument(numericId);
         if (!visualization) {
             return error(res, 404, "3D visualization not found");
         }
@@ -320,11 +321,12 @@ export const get3DModelStatus = async (req, res) => {
     try {
         const { id } = req.params;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
-        const visualization = await ThreeDVisualization.findByInstrument(id);
+        const visualization = await ThreeDVisualization.findByInstrument(numericId);
 
         if (!visualization) {
             return error(res, 404, "3D model not found");
@@ -360,11 +362,12 @@ export const get3DModelLoadingConfig = async (req, res) => {
         const { id } = req.params;
         const { optimized = true } = req.query;
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
-        const visualization = await ThreeDVisualization.findByInstrument(id);
+        const visualization = await ThreeDVisualization.findByInstrument(numericId);
 
         if (!visualization) {
             return error(res, 404, "3D model not found");
@@ -643,11 +646,11 @@ export const upload3DModel = async (req, res) => {
             fileUrl,
             fileSize,
             format,
-            metadata
-        } = req.body;
+            metadata } = req.body;
 
-        // Validate ObjectId
-        if (!mongoose.Types.ObjectId.isValid(id)) {
+        // Validate numeric ID
+        const numericId = parseInt(id);
+        if (isNaN(numericId) || numericId <= 0) {
             return error(res, 400, "Invalid instrument ID");
         }
 
@@ -658,7 +661,7 @@ export const upload3DModel = async (req, res) => {
 
         // Check if instrument exists
         const instrument = await Instrument.findOne({
-            _id: id,
+            _id: numericId,
             deletedAt: null
         });
 
@@ -675,10 +678,8 @@ export const upload3DModel = async (req, res) => {
         // Check file size limit (100MB)
         if (fileSize > 100 * 1024 * 1024) {
             return error(res, 400, "File size exceeds 100MB limit");
-        }
-
-        // Check if 3D model already exists
-        let visualization = await ThreeDVisualization.findByInstrument(id);
+        }        // Check if 3D model already exists
+        let visualization = await ThreeDVisualization.findByInstrument(numericId);
 
         if (visualization) {
             // Create new version of existing model
@@ -693,10 +694,9 @@ export const upload3DModel = async (req, res) => {
                 newFileData,
                 "Model updated via upload"
             );
-        } else {
-            // Create new 3D visualization
+        } else {            // Create new 3D visualization
             visualization = await ThreeDVisualization.createFromUpload({
-                instrumentId: id,
+                instrumentId: numericId,
                 file: {
                     fileName,
                     originalName: originalFileName,

@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
+import Counter from "../counter.model.js";
 
 const maintenanceRecordSchema = new mongoose.Schema({
+    _id: {
+        type: Number,
+        unique: true
+    },
     equipment: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "Equipment",
         required: true,
         index: true
@@ -41,14 +46,13 @@ const maintenanceRecordSchema = new mongoose.Schema({
     actualHours: {
         type: Number,
         min: 0
-    },
-    engineerId: {
-        type: mongoose.Schema.Types.ObjectId,
+    }, engineerId: {
+        type: Number,
         ref: "User",
         required: true
     },
     supervisorId: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User"
     },
     description: {
@@ -106,14 +110,13 @@ const maintenanceRecordSchema = new mongoose.Schema({
     },
     nextMaintenanceDate: {
         type: Date
-    },
-    createdBy: {
-        type: mongoose.Schema.Types.ObjectId,
+    }, createdBy: {
+        type: Number,
         ref: "User",
         required: true
     },
     updatedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: "User"
     },
     deletedAt: {
@@ -121,12 +124,21 @@ const maintenanceRecordSchema = new mongoose.Schema({
         default: null
     },
     deletedBy: {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Number,
         ref: 'User',
         default: null
     }
 }, {
-    timestamps: true
+    timestamps: true,
+    _id: false
+});
+
+// Pre-save hook to generate sequential ID
+maintenanceRecordSchema.pre('save', async function (next) {
+    if (this.isNew) {
+        this._id = await Counter.getNextSequenceValue('maintenanceRecord');
+    }
+    next();
 });
 
 // Indexes for efficient querying

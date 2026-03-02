@@ -73,11 +73,11 @@ router.get("/profile", protect, getProfile);
 /**
  * @swagger
  * /api/engineer/profile:
- *   put:
+ *   patch:
  *     tags:
  *       - Engineer
- *     summary: Update user profile
- *     description: Update current user's phone and department (cannot update role or status)
+ *     summary: Update user profile (partial update)
+ *     description: Partially update current user's phone and/or department (cannot update role or status)
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -90,11 +90,12 @@ router.get("/profile", protect, getProfile);
  *               phone:
  *                 type: string
  *                 example: "+1234567890"
- *                 description: "International phone format"
+ *                 description: "International phone format (optional)"
  *               department:
  *                 type: string
  *                 example: "Oil & Gas Engineering"
- *                 description: "User's department"
+ *                 description: "User's department (optional)"
+ *             description: "At least one field must be provided"
  *     responses:
  *       200:
  *         description: Profile updated successfully
@@ -129,7 +130,7 @@ router.get("/profile", protect, getProfile);
  *                     updatedAt:
  *                       type: string
  *       400:
- *         description: Invalid phone format
+ *         description: Invalid phone format or no fields provided
  *       401:
  *         description: Unauthorized - Invalid or missing token
  *       403:
@@ -139,7 +140,7 @@ router.get("/profile", protect, getProfile);
  *       500:
  *         description: Failed to update profile
  */
-router.put("/profile", protect, updateProfile);
+router.patch("/profile", protect, updateProfile);
 
 /**
  * @swagger
