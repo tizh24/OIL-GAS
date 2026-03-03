@@ -43,11 +43,10 @@ export const register = async (req, res) => {
             user: user._id,
             token: refreshToken,
             expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
-        });
-
-        return success(res, "User registered successfully", {
+        });        return success(res, "User registered successfully", {
             user: {
                 id: user._id,
+                userCode: user.userCode,
                 email: user.email,
                 role: user.role,
                 name: user.name,
@@ -58,7 +57,8 @@ export const register = async (req, res) => {
             },
             accessToken,
             refreshToken
-        });    } catch (err) {
+        });
+    } catch (err) {
         console.error("Registration error:", err);
         return error(res, 500, "Registration failed", err.message);
     }
@@ -99,11 +99,10 @@ export const login = async (req, res) => {
             user: user._id,
             token: refreshToken,
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });
-
-        return success(res, "Login successful", {
+        });        return success(res, "Login successful", {
             user: {
                 id: user._id,
+                userCode: user.userCode,
                 email: user.email,
                 role: user.role,
                 name: user.name,
@@ -114,7 +113,8 @@ export const login = async (req, res) => {
             },
             accessToken,
             refreshToken
-        });    } catch (err) {
+        });
+    } catch (err) {
         console.error("Login error:", err);
         return error(res, 500, "Login failed", err.message);
     }

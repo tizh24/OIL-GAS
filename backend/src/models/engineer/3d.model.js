@@ -3,12 +3,12 @@ import Counter from "../counter.model.js";
 
 // 3D Visualization Settings Schema
 const threeDVisualizationSchema = new mongoose.Schema({
-    _id: {
+    visualizationCode: {
         type: Number,
         unique: true
     },
     instrumentId: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Instrument",
         required: true,
         index: true
@@ -434,14 +434,14 @@ const threeDVisualizationSchema = new mongoose.Schema({
         default: true
     },
 
-    // Audit Fields
+        // Audit Fields
     createdBy: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
     updatedBy: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
     lastAccessed: {
@@ -459,10 +459,10 @@ const threeDVisualizationSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential ID
+// Pre-save hook to generate sequential visualizationCode
 threeDVisualizationSchema.pre('save', async function () {
     if (this.isNew) {
-        this._id = await Counter.getNextSequenceValue('threeDVisualization');
+        this.visualizationCode = await Counter.getNextSequenceValue('threeDVisualization');
     }
 });
 

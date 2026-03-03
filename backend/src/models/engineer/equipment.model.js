@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
 const equipmentSchema = new mongoose.Schema({
-    _id: {
+    equipmentCode: {
         type: Number,
         unique: true
     },
@@ -104,10 +104,10 @@ const equipmentSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential ID
+// Pre-save hook to generate sequential equipmentCode
 equipmentSchema.pre('save', async function () {
     if (this.isNew) {
-        this._id = await Counter.getNextSequenceValue('equipment');
+        this.equipmentCode = await Counter.getNextSequenceValue('equipment');
     }
 });
 

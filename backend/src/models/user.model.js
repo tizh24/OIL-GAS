@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Counter from "./counter.model.js";
 
 const userSchema = new mongoose.Schema({
-    _id: {
+    userCode: {
         type: Number,
         unique: true
     },
@@ -41,19 +41,18 @@ const userSchema = new mongoose.Schema({
         default: null
     },
     deletedBy: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         default: null
     }
 }, {
-    timestamps: true,
-    _id: false
+    timestamps: true
 });
 
-// Pre-save hook to generate sequential ID
+// Pre-save hook to generate sequential userCode
 userSchema.pre('save', async function () {
     if (this.isNew) {
-        this._id = await Counter.getNextSequenceValue('user');
+        this.userCode = await Counter.getNextSequenceValue('user');
     }
 });
 

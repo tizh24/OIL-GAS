@@ -2,12 +2,12 @@ import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
 const maintenanceRecordSchema = new mongoose.Schema({
-    _id: {
+    recordCode: {
         type: Number,
         unique: true
     },
     equipment: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "Equipment",
         required: true,
         index: true
@@ -45,14 +45,13 @@ const maintenanceRecordSchema = new mongoose.Schema({
     },
     actualHours: {
         type: Number,
-        min: 0
-    }, engineerId: {
-        type: Number,
+        min: 0    }, engineerId: {
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
     supervisorId: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     },
     description: {
@@ -133,10 +132,10 @@ const maintenanceRecordSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential ID
+// Pre-save hook to generate sequential recordCode
 maintenanceRecordSchema.pre('save', async function () {
     if (this.isNew) {
-        this._id = await Counter.getNextSequenceValue('maintenanceRecord');
+        this.recordCode = await Counter.getNextSequenceValue('maintenanceRecord');
     }
 });
 

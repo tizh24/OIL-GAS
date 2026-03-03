@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
 const instrumentSchema = new mongoose.Schema({
-    _id: {
+    instrumentCode: {
         type: Number,
         unique: true
     },
@@ -149,10 +149,10 @@ const instrumentSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential ID
+// Pre-save hook to generate sequential instrumentCode
 instrumentSchema.pre('save', async function () {
     if (this.isNew) {
-        this._id = await Counter.getNextSequenceValue('instrument');
+        this.instrumentCode = await Counter.getNextSequenceValue('instrument');
     }
 });
 

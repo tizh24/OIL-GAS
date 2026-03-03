@@ -2,21 +2,21 @@ import mongoose from "mongoose";
 import Counter from "./counter.model.js";
 
 const refreshTokenSchema = new mongoose.Schema({
-    _id: {
+    tokenCode: {
         type: Number,
         unique: true
     },
-    user: { type: Number, ref: "User" },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     token: String,
     expiresAt: Date
 }, {
-    _id: false
+    timestamps: true
 });
 
-// Pre-save hook to generate sequential ID
+// Pre-save hook to generate sequential tokenCode
 refreshTokenSchema.pre('save', async function () {
     if (this.isNew) {
-        this._id = await Counter.getNextSequenceValue('refreshToken');
+        this.tokenCode = await Counter.getNextSequenceValue('refreshToken');
     }
 });
 
