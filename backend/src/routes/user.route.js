@@ -1,5 +1,5 @@
 import express from "express";
-import { getUsers, createUser } from "../controllers/user.controller.js";
+import { getUsers, createUser, deleteUser, restoreUser, getDeletedUsers, getAllUsers } from "../controllers/user.controller.js";
 import { getProfile } from "../controllers/engineer/profile.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { allowRoles } from "../middlewares/role.middleware.js";
@@ -102,8 +102,8 @@ const router = express.Router();
  *   get:
  *     tags:
  *       - Admins
- *     summary: Get all users
- *     description: Retrieve a list of all users (requires authentication)
+ *     summary: Get all active users
+ *     description: Retrieve a list of all active users only (requires authentication)
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -153,6 +153,132 @@ router.get("/", protect, getUsers);
  *         description: Failed to create user
  */
 router.post("/", protect, allowRoles('admin'), createUser);
+
+/**
+ * @swagger
+ * /api/users/deleted:
+ *   get:
+ *     tags:
+ *       - Admins
+ *     summary: Get all deleted users
+ *     description: Retrieve a list of all soft-deleted users (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Deleted users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UsersResponse'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       500:
+ *         description: Failed to retrieve deleted users
+ */
+router.get("/deleted", protect, allowRoles('admin'), getDeletedUsers);
+
+/**
+ * @swagger
+ * /api/users/all:
+ *   get:
+ *     tags:
+ *       - Admins
+ *     summary: Get all users (active and inactive)
+ *     description: Retrieve a list of all users regardless of status (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: All users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UsersResponse'
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       500:
+ *         description: Failed to retrieve users
+ */
+router.get("/all", protect, allowRoles('admin'), getAllUsers);
+
+/**
+ * @swagger
+ * /api/users/{id}/delete:
+ *   delete:
+ *     tags:
+ *       - Admins
+ *     summary: Soft delete user
+ *     description: Soft delete a user (set status to inactive and mark as deleted)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: User is already deleted
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to delete user
+ */
+router.delete("/:id/delete", protect, allowRoles('admin'), deleteUser);
+
+/**
+ * @swagger
+ * /api/users/{id}/restore:
+ *   patch:
+ *     tags:
+ *       - Admins
+ *     summary: Restore deleted user
+ *     description: Restore a soft-deleted user (set status back to active)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User restored successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: User is not deleted
+ *       401:
+ *         description: Unauthorized - Invalid or missing token
+ *       403:
+ *         description: Forbidden - Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to restore user
+ */
+router.patch("/:id/restore", protect, allowRoles('admin'), restoreUser);
 
 // /**
 //  * @swagger
