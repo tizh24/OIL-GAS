@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
-const maintenanceRecordSchema = new mongoose.Schema({
-    recordCode: {
-        type: Number,
+const maintenanceRecordSchema = new mongoose.Schema({    recordCode: {
+        type: String,
         unique: true
     },
     equipment: {
@@ -133,10 +132,37 @@ const maintenanceRecordSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential recordCode
+// Pre-save hook to generate sequential recordCode with prefix
 maintenanceRecordSchema.pre('save', async function () {
-    if (this.isNew) {
-        this.recordCode = await Counter.getNextSequenceValue('maintenanceRecord');
+    if (this.isNew && !this.recordCode) {
+        // Determine prefix based on maintenance type
+        let prefix = '';
+        switch (this.type) {
+            case 'preventive':
+                prefix = 'PRV';
+                break;
+            case 'corrective':
+                prefix = 'COR';
+                break;
+            case 'predictive':
+                prefix = 'PRD';
+                break;
+            case 'emergency':
+                prefix = 'EMG';
+                break;
+            case 'inspection':
+                prefix = 'INS';
+                break;
+            case 'calibration':
+                prefix = 'CAL';
+                break;
+            default:
+                prefix = 'MNT';
+        }
+        
+        // Get counter for this maintenance type
+        const counter = await Counter.getNextSequenceValue(`maintenance_${this.type}`);
+        this.recordCode = `${prefix}_${counter.toString().padStart(5, '0')}`;
     }
 });
 

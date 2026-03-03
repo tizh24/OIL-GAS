@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
-const equipmentSchema = new mongoose.Schema({
-    equipmentCode: {
-        type: Number,
+const equipmentSchema = new mongoose.Schema({    equipmentCode: {
+        type: String,
         unique: true
     },
     name: {
@@ -104,10 +103,34 @@ const equipmentSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential equipmentCode
+// Pre-save hook to generate sequential equipmentCode with prefix
 equipmentSchema.pre('save', async function () {
-    if (this.isNew) {
-        this.equipmentCode = await Counter.getNextSequenceValue('equipment');
+    if (this.isNew && !this.equipmentCode) {
+        // Determine prefix based on equipment type
+        let prefix = '';
+        switch (this.type) {
+            case 'drilling':
+                prefix = 'DRL';
+                break;
+            case 'pumping':
+                prefix = 'PMP';
+                break;
+            case 'safety':
+                prefix = 'SFT';
+                break;
+            case 'measurement':
+                prefix = 'MSR';
+                break;
+            case 'transportation':
+                prefix = 'TRP';
+                break;
+            default:
+                prefix = 'EQP';
+        }
+        
+        // Get counter for this equipment type
+        const counter = await Counter.getNextSequenceValue(`equipment_${this.type}`);
+        this.equipmentCode = `${prefix}_${counter.toString().padStart(5, '0')}`;
     }
 });
 

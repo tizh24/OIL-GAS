@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "./counter.model.js";
 
-const userSchema = new mongoose.Schema({
-    userCode: {
-        type: Number,
+const userSchema = new mongoose.Schema({    userCode: {
+        type: String,
         unique: true
     },
     email: {
@@ -49,10 +48,28 @@ const userSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Pre-save hook to generate sequential userCode
+// Pre-save hook to generate sequential userCode with prefix
 userSchema.pre('save', async function () {
-    if (this.isNew) {
-        this.userCode = await Counter.getNextSequenceValue('user');
+    if (this.isNew && !this.userCode) {
+        // Determine prefix based on role
+        let prefix = '';
+        switch (this.role) {
+            case 'engineer':
+                prefix = 'ENG';
+                break;
+            case 'supervisor':
+                prefix = 'SUP';
+                break;
+            case 'admin':
+                prefix = 'ADM';
+                break;
+            default:
+                prefix = 'USR';
+        }
+        
+        // Get counter for this role
+        const counter = await Counter.getNextSequenceValue(`user_${this.role}`);
+        this.userCode = `${prefix}_${counter.toString().padStart(5, '0')}`;
     }
 });
 

@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "./counter.model.js";
 
-const refreshTokenSchema = new mongoose.Schema({
-    tokenCode: {
-        type: Number,
+const refreshTokenSchema = new mongoose.Schema({    tokenCode: {
+        type: String,
         unique: true
     },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -13,10 +12,12 @@ const refreshTokenSchema = new mongoose.Schema({
     timestamps: true
 });
 
-// Pre-save hook to generate sequential tokenCode
+// Pre-save hook to generate sequential tokenCode with prefix
 refreshTokenSchema.pre('save', async function () {
-    if (this.isNew) {
-        this.tokenCode = await Counter.getNextSequenceValue('refreshToken');
+    if (this.isNew && !this.tokenCode) {
+        // Generate refresh token code with prefix
+        const counter = await Counter.getNextSequenceValue('refresh_token');
+        this.tokenCode = `TKN_${counter.toString().padStart(5, '0')}`;
     }
 });
 

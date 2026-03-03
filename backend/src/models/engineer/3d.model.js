@@ -2,9 +2,8 @@ import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
 // 3D Visualization Settings Schema
-const threeDVisualizationSchema = new mongoose.Schema({
-    visualizationCode: {
-        type: Number,
+const threeDVisualizationSchema = new mongoose.Schema({    visualizationCode: {
+        type: String,
         unique: true
     },
     instrumentId: {
@@ -459,10 +458,12 @@ const threeDVisualizationSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential visualizationCode
+// Pre-save hook to generate sequential visualizationCode with prefix
 threeDVisualizationSchema.pre('save', async function () {
-    if (this.isNew) {
-        this.visualizationCode = await Counter.getNextSequenceValue('threeDVisualization');
+    if (this.isNew && !this.visualizationCode) {
+        // Generate 3D visualization code with prefix
+        const counter = await Counter.getNextSequenceValue('3d_visualization');
+        this.visualizationCode = `VIZ_${counter.toString().padStart(5, '0')}`;
     }
 });
 

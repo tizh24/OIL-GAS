@@ -1,9 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
-const instrumentSchema = new mongoose.Schema({
-    instrumentCode: {
-        type: Number,
+const instrumentSchema = new mongoose.Schema({    instrumentCode: {
+        type: String,
         unique: true
     },
     name: {
@@ -149,10 +148,43 @@ const instrumentSchema = new mongoose.Schema({
     _id: false
 });
 
-// Pre-save hook to generate sequential instrumentCode
+// Pre-save hook to generate sequential instrumentCode with prefix
 instrumentSchema.pre('save', async function () {
-    if (this.isNew) {
-        this.instrumentCode = await Counter.getNextSequenceValue('instrument');
+    if (this.isNew && !this.instrumentCode) {
+        // Determine prefix based on instrument type
+        let prefix = '';
+        switch (this.type) {
+            case 'pressure':
+                prefix = 'PSR';
+                break;
+            case 'temperature':
+                prefix = 'TMP';
+                break;
+            case 'flow':
+                prefix = 'FLW';
+                break;
+            case 'level':
+                prefix = 'LVL';
+                break;
+            case 'analytical':
+                prefix = 'ANL';
+                break;
+            case 'safety':
+                prefix = 'SFT';
+                break;
+            case 'control':
+                prefix = 'CTL';
+                break;
+            case 'monitoring':
+                prefix = 'MON';
+                break;
+            default:
+                prefix = 'INS';
+        }
+        
+        // Get counter for this instrument type
+        const counter = await Counter.getNextSequenceValue(`instrument_${this.type}`);
+        this.instrumentCode = `${prefix}_${counter.toString().padStart(5, '0')}`;
     }
 });
 
