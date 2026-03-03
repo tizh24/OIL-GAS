@@ -5,10 +5,32 @@ import "dotenv/config";
 let isConnected = false;
 
 export default async function handler(req, res) {
-    try {        // Only connect once to avoid multiple connections
+    try {
+        // Check for required environment variables
+        if (!process.env.MONGODB_URI) {
+            console.error("MONGODB_URI environment variable is not set");
+            return res.status(500).json({
+                success: false,
+                message: "Database configuration error",
+                error: process.env.NODE_ENV !== 'production' ? "MONGODB_URI not set" : undefined
+            });
+        }
+
+        if (!process.env.JWT_SECRET) {
+            console.error("JWT_SECRET environment variable is not set");
+            return res.status(500).json({
+                success: false,
+                message: "Authentication configuration error",
+                error: process.env.NODE_ENV !== 'production' ? "JWT_SECRET not set" : undefined
+            });
+        }
+
+        // Only connect once to avoid multiple connections
         if (!isConnected) {
+            console.log("Attempting to connect to MongoDB...");
             await connectDB();
             isConnected = true;
+            console.log("MongoDB connection established");
         }
 
         // Set CORS headers for all requests
@@ -26,6 +48,7 @@ export default async function handler(req, res) {
         // Handle the request with Express app
         return app(req, res);
     } catch (error) {
+        console.error("Handler error:", error);
         return res.status(500).json({
             success: false,
             message: "Internal server error",

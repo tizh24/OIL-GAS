@@ -7,15 +7,22 @@ const connectDB = async () => {
     }
 
     if (mongoose.connection.readyState === 1) {
+        console.log("MongoDB already connected");
         return mongoose.connection;
     }
 
     if (mongoose.connection.readyState === 2) {
+        console.log("MongoDB connection in progress");
         return mongoose.connection;
     }
 
     try {
-        const conn = await mongoose.connect(process.env.MONGODB_URI);
+        console.log("Connecting to MongoDB...");
+        const conn = await mongoose.connect(process.env.MONGODB_URI, {
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
         console.log(`MongoDB Connected: ${conn.connection.host}`);
         return mongoose.connection;
     } catch (error) {
