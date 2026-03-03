@@ -51,11 +51,10 @@ const userSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate sequential ID
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
     if (this.isNew) {
         this._id = await Counter.getNextSequenceValue('user');
     }
-    next();
 });
 
 userSchema.methods.softDelete = function (deletedByUserId) {

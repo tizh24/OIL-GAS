@@ -150,11 +150,10 @@ const instrumentSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate sequential ID
-instrumentSchema.pre('save', async function (next) {
+instrumentSchema.pre('save', async function () {
     if (this.isNew) {
         this._id = await Counter.getNextSequenceValue('instrument');
     }
-    next();
 });
 
 // Indexes for efficient querying

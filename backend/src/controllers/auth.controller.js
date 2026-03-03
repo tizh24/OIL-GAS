@@ -58,9 +58,9 @@ export const register = async (req, res) => {
             },
             accessToken,
             refreshToken
-        });
-    } catch (err) {
-        return error(res, 500, "Registration failed");
+        });    } catch (err) {
+        console.error("Registration error:", err);
+        return error(res, 500, "Registration failed", err.message);
     }
 };
 
@@ -114,8 +114,8 @@ export const login = async (req, res) => {
             },
             accessToken,
             refreshToken
-        });
-    } catch (err) {
+        });    } catch (err) {
+        console.error("Login error:", err);
         return error(res, 500, "Login failed", err.message);
     }
 };

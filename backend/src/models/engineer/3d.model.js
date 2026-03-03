@@ -460,11 +460,10 @@ const threeDVisualizationSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate sequential ID
-threeDVisualizationSchema.pre('save', async function (next) {
+threeDVisualizationSchema.pre('save', async function () {
     if (this.isNew) {
         this._id = await Counter.getNextSequenceValue('threeDVisualization');
     }
-    next();
 });
 
 // Indexes for performance

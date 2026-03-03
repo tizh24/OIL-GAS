@@ -105,11 +105,10 @@ const equipmentSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate sequential ID
-equipmentSchema.pre('save', async function (next) {
+equipmentSchema.pre('save', async function () {
     if (this.isNew) {
         this._id = await Counter.getNextSequenceValue('equipment');
     }
-    next();
 });
 
 // Indexes for efficient querying

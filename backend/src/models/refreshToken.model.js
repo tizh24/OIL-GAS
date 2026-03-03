@@ -14,11 +14,10 @@ const refreshTokenSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate sequential ID
-refreshTokenSchema.pre('save', async function (next) {
+refreshTokenSchema.pre('save', async function () {
     if (this.isNew) {
         this._id = await Counter.getNextSequenceValue('refreshToken');
     }
-    next();
 });
 
 // TTL index to automatically delete expired tokens

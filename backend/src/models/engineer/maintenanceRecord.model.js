@@ -134,11 +134,10 @@ const maintenanceRecordSchema = new mongoose.Schema({
 });
 
 // Pre-save hook to generate sequential ID
-maintenanceRecordSchema.pre('save', async function (next) {
+maintenanceRecordSchema.pre('save', async function () {
     if (this.isNew) {
         this._id = await Counter.getNextSequenceValue('maintenanceRecord');
     }
-    next();
 });
 
 // Indexes for efficient querying
