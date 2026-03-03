@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
-const maintenanceRecordSchema = new mongoose.Schema({    recordCode: {
+const maintenanceRecordSchema = new mongoose.Schema({
+    recordCode: {
         type: String,
         unique: true
     },
@@ -159,7 +160,7 @@ maintenanceRecordSchema.pre('save', async function () {
             default:
                 prefix = 'MNT';
         }
-        
+
         // Get counter for this maintenance type
         const counter = await Counter.getNextSequenceValue(`maintenance_${this.type}`);
         this.recordCode = `${prefix}_${counter.toString().padStart(5, '0')}`;

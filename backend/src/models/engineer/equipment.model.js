@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
-const equipmentSchema = new mongoose.Schema({    equipmentCode: {
+const equipmentSchema = new mongoose.Schema({
+    equipmentCode: {
         type: String,
         unique: true
     },
@@ -127,7 +128,7 @@ equipmentSchema.pre('save', async function () {
             default:
                 prefix = 'EQP';
         }
-        
+
         // Get counter for this equipment type
         const counter = await Counter.getNextSequenceValue(`equipment_${this.type}`);
         this.equipmentCode = `${prefix}_${counter.toString().padStart(5, '0')}`;

@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "./counter.model.js";
 
-const refreshTokenSchema = new mongoose.Schema({    tokenCode: {
+const refreshTokenSchema = new mongoose.Schema({
+    tokenCode: {
         type: String,
         unique: true
     },

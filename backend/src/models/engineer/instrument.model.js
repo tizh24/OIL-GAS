@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
-const instrumentSchema = new mongoose.Schema({    instrumentCode: {
+const instrumentSchema = new mongoose.Schema({
+    instrumentCode: {
         type: String,
         unique: true
     },
@@ -181,7 +182,7 @@ instrumentSchema.pre('save', async function () {
             default:
                 prefix = 'INS';
         }
-        
+
         // Get counter for this instrument type
         const counter = await Counter.getNextSequenceValue(`instrument_${this.type}`);
         this.instrumentCode = `${prefix}_${counter.toString().padStart(5, '0')}`;

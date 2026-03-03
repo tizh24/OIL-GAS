@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
 import Counter from "./counter.model.js";
 
-const userSchema = new mongoose.Schema({    userCode: {
+const userSchema = new mongoose.Schema({
+    userCode: {
         type: String,
         unique: true
     },
@@ -66,7 +67,7 @@ userSchema.pre('save', async function () {
             default:
                 prefix = 'USR';
         }
-        
+
         // Get counter for this role
         const counter = await Counter.getNextSequenceValue(`user_${this.role}`);
         this.userCode = `${prefix}_${counter.toString().padStart(5, '0')}`;

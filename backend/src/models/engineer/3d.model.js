@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 import Counter from "../counter.model.js";
 
 // 3D Visualization Settings Schema
-const threeDVisualizationSchema = new mongoose.Schema({    visualizationCode: {
+const threeDVisualizationSchema = new mongoose.Schema({
+    visualizationCode: {
         type: String,
         unique: true
     },
