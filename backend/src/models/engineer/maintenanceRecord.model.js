@@ -45,7 +45,8 @@ const maintenanceRecordSchema = new mongoose.Schema({
     },
     actualHours: {
         type: Number,
-        min: 0    }, engineerId: {
+        min: 0
+    }, engineerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true

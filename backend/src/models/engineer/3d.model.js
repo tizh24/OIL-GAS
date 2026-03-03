@@ -434,7 +434,7 @@ const threeDVisualizationSchema = new mongoose.Schema({
         default: true
     },
 
-        // Audit Fields
+    // Audit Fields
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",

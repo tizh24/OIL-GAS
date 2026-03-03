@@ -43,7 +43,7 @@ export const register = async (req, res) => {
             user: user._id,
             token: refreshToken,
             expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000
-        });        return success(res, "User registered successfully", {
+        }); return success(res, "User registered successfully", {
             user: {
                 id: user._id,
                 userCode: user.userCode,
@@ -99,7 +99,7 @@ export const login = async (req, res) => {
             user: user._id,
             token: refreshToken,
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        });        return success(res, "Login successful", {
+        }); return success(res, "Login successful", {
             user: {
                 id: user._id,
                 userCode: user.userCode,
