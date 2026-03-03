@@ -1,5 +1,12 @@
 import express from "express";
-import { register, login, refresh, logout } from "../controllers/auth.controller.js";
+import { register, login, refresh, logout, changePassword } from "../controllers/auth.controller.js";
+import { protect } from "../middlewares/auth.middleware.js";
+import { validateBody, sanitize } from "../middlewares/validation.middleware.js";
+import {
+    loginValidationSchema,
+    registerValidationSchema,
+    changePasswordValidationSchema
+} from "../utils/validation.js";
 
 const router = express.Router();
 
@@ -138,7 +145,7 @@ const router = express.Router();
  *       500:
  *         description: Login failed
  */
-router.post("/login", login);
+router.post("/login", sanitize(['email']), validateBody(loginValidationSchema), login);
 
 // /**
 //  * @swagger
@@ -191,5 +198,71 @@ router.post("/login", login);
  *         description: Logout failed
  */
 router.post("/logout", logout);
+
+/**
+ * @swagger
+ * /api/auth/change-password:
+ *   put:
+ *     tags:
+ *       - Authentication
+ *     summary: Change user password
+ *     description: Change the password for the authenticated user
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - currentPassword
+ *               - newPassword
+ *               - confirmNewPassword
+ *             properties:
+ *               currentPassword:
+ *                 type: string
+ *                 description: User's current password
+ *                 example: "oldPassword123!"
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *                 pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+ *                 description: New password (min 8 chars, must contain uppercase, lowercase, number, and special character)
+ *                 example: "NewPassword123!"
+ *               confirmNewPassword:
+ *                 type: string
+ *                 description: Confirmation of new password (must match newPassword)
+ *                 example: "NewPassword123!"
+ *     responses:
+ *       200:
+ *         description: Password changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Password changed successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: "Your password has been updated. Please log in again with your new password."
+ *       400:
+ *         description: Validation error or current password incorrect
+ *       401:
+ *         description: Unauthorized or account not active
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to change password
+ */
+router.put("/change-password", protect, validateBody(changePasswordValidationSchema), changePassword);
 
 export default router;

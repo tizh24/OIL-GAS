@@ -14,12 +14,10 @@ export const register = async (req, res) => {
         // Check if user exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return error(res, 400, "User already exists");
-        }
-
-        // Validate required fields
-        if (!name) {
-            return error(res, 400, "Name is required");
+            return error(res, 400, "User already exists", {
+                field: 'email',
+                message: 'An account with this email already exists'
+            });
         }
 
         // Hash password
@@ -68,20 +66,20 @@ export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return error(res, 400, "Email and password are required");
-        }
-
-        // Explicitly select password field (might be excluded by default)
+        // Find user and explicitly select password field
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
-            return error(res, 401, "Invalid credentials");
+            return error(res, 401, "Invalid credentials", {
+                message: 'Email or password is incorrect'
+            });
         }
 
-        const ok = await bcrypt.compare(password, user.password);
-
-        if (!ok) {
-            return error(res, 401, "Invalid credentials");
+        // Verify password
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return error(res, 401, "Invalid credentials", {
+                message: 'Email or password is incorrect'
+            });
         }
 
         // Check if user is soft deleted
@@ -177,5 +175,60 @@ export const logout = async (req, res) => {
         return success(res, "Logged out successfully");
     } catch (err) {
         return error(res, 500, "Logout failed");
+    }
+};
+
+export const changePassword = async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        const userId = req.user.id;
+
+        // Get user with password field
+        const user = await User.findById(userId).select('+password');
+        if (!user) {
+            return error(res, 404, "User not found");
+        }
+
+        // Check if user is active
+        if (user.status !== 'active' || user.deletedAt) {
+            return error(res, 401, "Account is not active");
+        }
+
+        // Verify current password
+        const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+        if (!isCurrentPasswordValid) {
+            return error(res, 400, "Current password is incorrect", {
+                field: 'currentPassword',
+                message: 'The current password you entered is incorrect'
+            });
+        }
+
+        // Check if new password is different from current
+        const isSamePassword = await bcrypt.compare(newPassword, user.password);
+        if (isSamePassword) {
+            return error(res, 400, "New password must be different from current password", {
+                field: 'newPassword',
+                message: 'Please choose a different password'
+            });
+        }
+
+        // Hash new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 12);
+
+        // Update password
+        await User.findByIdAndUpdate(userId, {
+            password: hashedNewPassword,
+            updatedAt: new Date()
+        });
+
+        // Invalidate all existing refresh tokens for security
+        await RefreshToken.deleteMany({ user: userId });
+
+        return success(res, "Password changed successfully", {
+            message: 'Your password has been updated. Please log in again with your new password.'
+        });
+    } catch (err) {
+        console.error("Change password error:", err);
+        return error(res, 500, "Failed to change password", err.message);
     }
 };

@@ -1,8 +1,24 @@
 import express from "express";
-import { getUsers, createUser, deleteUser, restoreUser, getDeletedUsers, getAllUsers } from "../controllers/user.controller.js";
-import { getProfile } from "../controllers/engineer/profile.controller.js";
+import {
+    getUsers,
+    createUser,
+    updateUser,
+    updateProfile,
+    getProfile,
+    deleteUser,
+    restoreUser,
+    getDeletedUsers,
+    getAllUsers
+} from "../controllers/user.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { allowRoles } from "../middlewares/role.middleware.js";
+import { validateBody, validateParams, sanitize } from "../middlewares/validation.middleware.js";
+import {
+    createUserValidationSchema,
+    updateUserValidationSchema,
+    updateProfileValidationSchema,
+    mongoIdValidationSchema
+} from "../utils/validation.js";
 
 const router = express.Router();
 
@@ -152,7 +168,7 @@ router.get("/", protect, getUsers);
  *       500:
  *         description: Failed to create user
  */
-router.post("/", protect, allowRoles('admin'), createUser);
+router.post("/", protect, allowRoles('admin'), sanitize(['name', 'email']), validateBody(createUserValidationSchema), createUser);
 
 /**
  * @swagger
@@ -241,7 +257,7 @@ router.get("/all", protect, allowRoles('admin'), getAllUsers);
  *       500:
  *         description: Failed to delete user
  */
-router.delete("/:id/delete", protect, allowRoles('admin'), deleteUser);
+router.delete("/:id/delete", protect, allowRoles('admin'), validateParams(mongoIdValidationSchema), deleteUser);
 
 /**
  * @swagger
@@ -278,62 +294,160 @@ router.delete("/:id/delete", protect, allowRoles('admin'), deleteUser);
  *       500:
  *         description: Failed to restore user
  */
-router.patch("/:id/restore", protect, allowRoles('admin'), restoreUser);
+router.patch("/:id/restore", protect, allowRoles('admin'), validateParams(mongoIdValidationSchema), restoreUser);
 
-// /**
-//  * @swagger
-//  * /api/users/me:
-//  *   get:
-//  *     tags:
-//  *       - Users
-//  *     summary: Get current user profile
-//  *     description: Retrieve the authenticated user's own profile information (no role check needed)
-//  *     security:
-//  *       - bearerAuth: []
-//  *     responses:
-//  *       200:
-//  *         description: User profile retrieved successfully
-//  *         content:
-//  *           application/json:
-//  *             schema:
-//  *               type: object
-//  *               properties:
-//  *                 success:
-//  *                   type: boolean
-//  *                   example: true
-//  *                 message:
-//  *                   type: string
-//  *                   example: "User profile retrieved successfully"
-//  *                 data:
-//  *                   type: object
-//  *                   properties:
-//  *                     id:
-//  *                       type: string
-//  *                       example: "60f7b3b3b3b3b3b3b3b3b3b3"
-//  *                     email:
-//  *                       type: string
-//  *                       format: email
-//  *                       example: "user@example.com"
-//  *                     name:
-//  *                       type: string
-//  *                       example: "John Engineer"
-//  *                     role:
-//  *                       type: string
-//  *                       enum: ["admin", "engineer", "supervisor"]
-//  *                       example: "engineer"
-//  *                     status:
-//  *                       type: string
-//  *                       enum: ["active", "inactive"]
-//  *                       example: "active"
-//  *       401:
-//  *         description: Unauthorized - Invalid or missing token
-//  *       403:
-//  *         description: Account is inactive or deactivated
-//  *       404:
-//  *         description: User not found
-//  *       500:
-//  *         description: Failed to retrieve user profile
-//  */
-// router.get("/me", protect, getProfile);
+
+/**
+ * @swagger
+ * /api/users/profile:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Get current user profile
+ *     description: Retrieve the authenticated user's own profile information
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       401:
+ *         description: Unauthorized or account not active
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to retrieve profile
+ */
+router.get("/profile", protect, getProfile);
+
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     tags:
+ *       - Users
+ *     summary: Update current user profile
+ *     description: Update the authenticated user's own profile information
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 pattern: '^[a-zA-Z\s]+$'
+ *                 example: "John Updated Engineer"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "john.updated@company.com"
+ *               phone:
+ *                 type: string
+ *                 pattern: '^[\+]?[1-9][\d]{0,15}$'
+ *                 example: "+1234567890"
+ *               department:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 example: "Updated Engineering Department"
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Validation error or email already in use
+ *       401:
+ *         description: Unauthorized or account not active
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to update profile
+ */
+router.put("/profile", protect, sanitize(['name', 'email', 'phone', 'department']), validateBody(updateProfileValidationSchema), updateProfile);
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   put:
+ *     tags:
+ *       - Admins
+ *     summary: Update user (Admin only)
+ *     description: Update a specific user's information (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: User ID (MongoDB ObjectId)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 pattern: '^[a-zA-Z\s]+$'
+ *                 example: "John Updated Engineer"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "john.updated@company.com"
+ *               phone:
+ *                 type: string
+ *                 pattern: '^[\+]?[1-9][\d]{0,15}$'
+ *                 example: "+1234567890"
+ *               department:
+ *                 type: string
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 example: "Updated Engineering Department"
+ *               role:
+ *                 type: string
+ *                 enum: ["admin", "engineer", "supervisor"]
+ *                 example: "engineer"
+ *               status:
+ *                 type: string
+ *                 enum: ["active", "inactive"]
+ *                 example: "active"
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/UserResponse'
+ *       400:
+ *         description: Validation error or email already in use
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Admin access required
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Failed to update user
+ */
+router.put("/:id", protect, allowRoles('admin'), validateParams(mongoIdValidationSchema), sanitize(['name', 'email', 'phone', 'department']), validateBody(updateUserValidationSchema), updateUser);
+
 
 export default router;
