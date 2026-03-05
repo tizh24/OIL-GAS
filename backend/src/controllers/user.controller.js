@@ -4,24 +4,45 @@ import bcrypt from "bcryptjs";
 
 export const getUsers = async (req, res) => {
     try {
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const search = req.query.search?.trim() || "";
+        const skip = (page - 1) * limit;
         const { includeDeleted } = req.query;
 
-        let query = {
-            status: 'active'  // Chỉ lấy users có status active
-        };
-
-        // Include or exclude deleted users
-        if (includeDeleted !== 'true') {
-            query.deletedAt = null; // Only non-deleted users
+        let query = { deletedAt: null };
+        if (includeDeleted === 'true') {
+            delete query.deletedAt;
         }
 
-        const users = await User.find(query)
-            .select('-password')
-            .populate('deletedBy', 'name email userCode');
+        if (search) {
+            query.$or = [
+                { fullName: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } },
+            ];
+        }
 
-        return success(res, "Users retrieved successfully", users);
+        const [users, totalUsers] = await Promise.all([
+            User.find(query)
+                .select('-password')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .populate('deletedBy', 'fullName email userCode')
+                .lean(),
+            User.countDocuments(query),
+        ]);
+
+        return success(res, "Users retrieved successfully", {
+            users,
+            pagination: {
+                totalItems: totalUsers,
+                totalPages: Math.ceil(totalUsers / limit),
+                currentPage: page,
+                limit,
+            },
+        });
     } catch (err) {
-        console.error("Get users error:", err);
         return error(res, 500, "Failed to retrieve users", err.message);
     }
 };

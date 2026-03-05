@@ -181,7 +181,7 @@ export const logout = async (req, res) => {
 export const changePassword = async (req, res) => {
     try {
         const { currentPassword, newPassword } = req.body;
-        const userId = req.user.id;
+        const userId = req.user.userId;  // ✅ Fixed: Use userId instead of id
 
         // Get user with password field
         const user = await User.findById(userId).select('+password');

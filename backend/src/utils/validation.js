@@ -32,10 +32,10 @@ const nameRules = Joi.string()
     });
 
 const phoneRules = Joi.string()
-    .pattern(/^[\+]?[1-9][\d]{0,15}$/)
+    .pattern(/^(?:(?:\+84|84|0)([3|5|7|8|9])([0-9]{8})|[\+]?[1-9][\d]{0,15})$/)
     .optional()
     .messages({
-        'string.pattern.base': 'Please enter a valid phone number'
+        'string.pattern.base': 'Please enter a valid phone number (Vietnamese: +84901234567 or International: +1234567890)'
     });
 
 const roleRules = Joi.string()
