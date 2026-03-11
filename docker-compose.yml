@@ -1,0 +1,161 @@
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7-jammy
+    container_name: oil-gas-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-password123}
+      MONGO_INITDB_DATABASE: Oil_Gas_Analyzer
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo-init:/docker-entrypoint-initdb.d
+    networks:
+      - oil-gas-network
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: oil-gas-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data:/data
+    networks:
+      - oil-gas-network
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile
+    container_name: oil-gas-auth-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - AUTH_SERVICE_PORT=3001
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/Oil_Gas_Auth?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - oil-gas-network
+    volumes:
+      - ./services/auth-service/src:/app/src:ro
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # User Service
+  user-service:
+    build:
+      context: ./services/user-service
+      dockerfile: Dockerfile
+    container_name: oil-gas-user-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - USER_SERVICE_PORT=3002
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/Oil_Gas_Users?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - oil-gas-network
+    volumes:
+      - ./services/user-service/src:/app/src:ro
+
+  # Equipment Service
+  equipment-service:
+    build:
+      context: ./services/equipment-service
+      dockerfile: Dockerfile
+    container_name: oil-gas-equipment-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - EQUIPMENT_SERVICE_PORT=3003
+      - MONGODB_URI=mongodb://admin:password123@mongodb:27017/Oil_Gas_Equipment?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+      - AUTH_SERVICE_URL=http://auth-service:3001
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    networks:
+      - oil-gas-network
+    volumes:
+      - ./services/equipment-service/src:/app/src:ro
+      - equipment_uploads:/app/uploads
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: oil-gas-api-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - API_GATEWAY_PORT=3000
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - USER_SERVICE_URL=http://user-service:3002
+      - EQUIPMENT_SERVICE_URL=http://equipment-service:3003
+      - ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
+      - REDIS_URL=redis://:redis123@redis:6379
+    depends_on:
+      auth-service:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+      equipment-service:
+        condition: service_started
+    networks:
+      - oil-gas-network
+
+networks:
+  oil-gas-network:
+    driver: bridge
+    name: oil-gas-network
+
+volumes:
+  mongodb_data:
+    name: oil-gas-mongodb-data
+  redis_data:
+    name: oil-gas-redis-data
+  equipment_uploads:
+    name: oil-gas-equipment-uploads

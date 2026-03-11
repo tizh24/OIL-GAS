@@ -1,0 +1,37 @@
+{
+    "name": "oil-gas-microservices",
+    "version": "1.0.0",
+    "description": "Oil & Gas Management System - Microservices Architecture",
+    "type": "module",
+    "scripts": {
+        "dev": "powershell -ExecutionPolicy Bypass -File scripts/dev-start.ps1",
+        "dev:docker": "docker-compose up --build -d",
+        "start": "docker-compose up -d",
+        "stop": "docker-compose down",
+        "clean": "docker-compose down -v --rmi all --remove-orphans",
+        "logs": "docker-compose logs -f",
+        "logs:auth": "docker-compose logs -f auth-service",
+        "logs:user": "docker-compose logs -f user-service",
+        "logs:equipment": "docker-compose logs -f equipment-service",
+        "logs:gateway": "docker-compose logs -f api-gateway",
+        "logs:mongodb": "docker-compose logs -f mongodb",
+        "build": "docker-compose build",
+        "rebuild": "docker-compose build --no-cache",
+        "services:status": "docker-compose ps",
+        "services:restart": "docker-compose restart",
+        "services:health": "powershell -Command \"$services = @(3000,3001,3002,3003); foreach($port in $services) { try { $response = Invoke-WebRequest -Uri 'http://localhost:'+$port+'/health' -UseBasicParsing -TimeoutSec 2; Write-Host 'Port '+$port+': OK' -ForegroundColor Green } catch { Write-Host 'Port '+$port+': FAIL' -ForegroundColor Red } }\"",
+        "setup": "type SETUP.md"
+    },
+    "keywords": [
+        "microservices",
+        "oil",
+        "gas",
+        "management",
+        "docker"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
