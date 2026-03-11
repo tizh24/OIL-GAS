@@ -6,6 +6,7 @@ import authRoutes from "./routes/auth.route.js";
 import equipmentRoutes from "./routes/engineer/equipment.routes.js";
 import instrumentRoutes from "./routes/engineer/instrument.routes.js";
 import threeDRoutes from "./routes/engineer/3d.routes.js";
+import incidentRoutes from "./routes/engineer/incident.route.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/engineer/equipment", equipmentRoutes);
 app.use("/api/engineer/instruments", instrumentRoutes);
+app.use("/api/engineer", incidentRoutes);
 app.use("/api/3d", threeDRoutes);
 app.use("/api/control", threeDRoutes);
 

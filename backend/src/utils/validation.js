@@ -276,3 +276,524 @@ export const validateSchema = (schema, data) => {
 
     return { isValid: true, errors: null, value };
 };
+
+// Incident & Alert Validation Schemas
+export const createIncidentValidationSchema = Joi.object({
+    title: Joi.string()
+        .min(3)
+        .max(255)
+        .required()
+        .messages({
+            'string.min': 'Incident title must be at least 3 characters long',
+            'string.max': 'Incident title must be less than 255 characters',
+            'any.required': 'Incident title is required'
+        }),
+    description: Joi.string()
+        .min(10)
+        .max(2000)
+        .required()
+        .messages({
+            'string.min': 'Description must be at least 10 characters long',
+            'string.max': 'Description must be less than 2000 characters',
+            'any.required': 'Incident description is required'
+        }),
+    severity: Joi.string()
+        .valid('low', 'medium', 'high', 'critical')
+        .required()
+        .messages({
+            'any.only': 'Severity must be one of: low, medium, high, critical',
+            'any.required': 'Severity is required'
+        }),
+    incidentType: Joi.string()
+        .valid('equipment_failure', 'safety_violation', 'environmental_incident', 'operational_issue', 'maintenance_required', 'security_breach', 'other')
+        .required()
+        .messages({
+            'any.only': 'Incident type must be one of: equipment_failure, safety_violation, environmental_incident, operational_issue, maintenance_required, security_breach, other',
+            'any.required': 'Incident type is required'
+        }),
+    location: Joi.string()
+        .min(3)
+        .max(255)
+        .required()
+        .messages({
+            'string.min': 'Location must be at least 3 characters long',
+            'string.max': 'Location must be less than 255 characters',
+            'any.required': 'Location is required'
+        }),
+    equipment: Joi.string()
+        .min(2)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Equipment name must be at least 2 characters long',
+            'string.max': 'Equipment name must be less than 255 characters'
+        }),
+    instrument: Joi.string()
+        .min(2)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Instrument name must be at least 2 characters long',
+            'string.max': 'Instrument name must be less than 255 characters'
+        }),
+    assignedTo: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Assigned user must be a valid user ID'
+        }),
+    priority: Joi.string()
+        .valid('low', 'medium', 'high', 'urgent')
+        .default('medium')
+        .messages({
+            'any.only': 'Priority must be one of: low, medium, high, urgent'
+        }),
+    estimatedResolutionTime: Joi.date()
+        .greater('now')
+        .optional()
+        .messages({
+            'date.greater': 'Estimated resolution time must be in the future'
+        })
+}).options({ stripUnknown: true });
+
+export const updateIncidentValidationSchema = Joi.object({
+    title: Joi.string()
+        .min(3)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Incident title must be at least 3 characters long',
+            'string.max': 'Incident title must be less than 255 characters'
+        }),
+    description: Joi.string()
+        .min(10)
+        .max(2000)
+        .optional()
+        .messages({
+            'string.min': 'Description must be at least 10 characters long',
+            'string.max': 'Description must be less than 2000 characters'
+        }),
+    severity: Joi.string()
+        .valid('low', 'medium', 'high', 'critical')
+        .optional()
+        .messages({
+            'any.only': 'Severity must be one of: low, medium, high, critical'
+        }),
+    status: Joi.string()
+        .valid('open', 'in_progress', 'resolved', 'closed')
+        .optional()
+        .messages({
+            'any.only': 'Status must be one of: open, in_progress, resolved, closed'
+        }),
+    incidentType: Joi.string()
+        .valid('equipment_failure', 'safety_violation', 'environmental_incident', 'operational_issue', 'maintenance_required', 'security_breach', 'other')
+        .optional()
+        .messages({
+            'any.only': 'Incident type must be one of: equipment_failure, safety_violation, environmental_incident, operational_issue, maintenance_required, security_breach, other'
+        }),
+    location: Joi.string()
+        .min(3)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Location must be at least 3 characters long',
+            'string.max': 'Location must be less than 255 characters'
+        }),
+    equipment: Joi.string()
+        .min(2)
+        .max(255)
+        .allow(null, '')
+        .optional()
+        .messages({
+            'string.min': 'Equipment name must be at least 2 characters long',
+            'string.max': 'Equipment name must be less than 255 characters'
+        }),
+    instrument: Joi.string()
+        .min(2)
+        .max(255)
+        .allow(null, '')
+        .optional()
+        .messages({
+            'string.min': 'Instrument name must be at least 2 characters long',
+            'string.max': 'Instrument name must be less than 255 characters'
+        }),
+    assignedTo: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .allow(null)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Assigned user must be a valid user ID'
+        }),
+    priority: Joi.string()
+        .valid('low', 'medium', 'high', 'urgent')
+        .optional()
+        .messages({
+            'any.only': 'Priority must be one of: low, medium, high, urgent'
+        }),
+    estimatedResolutionTime: Joi.date()
+        .allow(null)
+        .optional()
+        .messages({
+            'date.base': 'Estimated resolution time must be a valid date'
+        }),
+    resolution: Joi.string()
+        .min(10)
+        .max(2000)
+        .optional()
+        .messages({
+            'string.min': 'Resolution must be at least 10 characters long',
+            'string.max': 'Resolution must be less than 2000 characters'
+        })
+}).options({ stripUnknown: true });
+
+export const incidentCommentValidationSchema = Joi.object({
+    comment: Joi.string()
+        .min(5)
+        .max(1000)
+        .required()
+        .messages({
+            'string.min': 'Comment must be at least 5 characters long',
+            'string.max': 'Comment must be less than 1000 characters',
+            'any.required': 'Comment is required'
+        })
+}).options({ stripUnknown: true });
+
+export const incidentFilterValidationSchema = Joi.object({
+    severity: Joi.string()
+        .valid('low', 'medium', 'high', 'critical')
+        .optional()
+        .messages({
+            'any.only': 'Severity must be one of: low, medium, high, critical'
+        }),
+    status: Joi.string()
+        .valid('open', 'in_progress', 'resolved', 'closed')
+        .optional()
+        .messages({
+            'any.only': 'Status must be one of: open, in_progress, resolved, closed'
+        }),
+    incidentType: Joi.string()
+        .valid('equipment_failure', 'safety_violation', 'environmental_incident', 'operational_issue', 'maintenance_required', 'security_breach', 'other')
+        .optional()
+        .messages({
+            'any.only': 'Incident type must be valid'
+        }),
+    instrument: Joi.string()
+        .min(1)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Instrument filter must be at least 1 character',
+            'string.max': 'Instrument filter must be less than 255 characters'
+        }),
+    equipment: Joi.string()
+        .min(1)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Equipment filter must be at least 1 character',
+            'string.max': 'Equipment filter must be less than 255 characters'
+        }),
+    startDate: Joi.date()
+        .optional()
+        .messages({
+            'date.base': 'Start date must be a valid date'
+        }),
+    endDate: Joi.date()
+        .min(Joi.ref('startDate'))
+        .optional()
+        .messages({
+            'date.base': 'End date must be a valid date',
+            'date.min': 'End date must be after start date'
+        }),
+    assignedTo: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Assigned user must be a valid user ID'
+        }),
+    reportedBy: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Reported by user must be a valid user ID'
+        }),
+    page: Joi.number()
+        .integer()
+        .min(1)
+        .default(1)
+        .messages({
+            'number.base': 'Page must be a number',
+            'number.integer': 'Page must be an integer',
+            'number.min': 'Page must be at least 1'
+        }),
+    limit: Joi.number()
+        .integer()
+        .min(1)
+        .max(100)
+        .default(10)
+        .messages({
+            'number.base': 'Limit must be a number',
+            'number.integer': 'Limit must be an integer',
+            'number.min': 'Limit must be at least 1',
+            'number.max': 'Limit must be at most 100'
+        })
+}).options({ stripUnknown: true });
+
+// Alert Validation Schemas
+export const createAlertValidationSchema = Joi.object({
+    title: Joi.string()
+        .min(3)
+        .max(255)
+        .required()
+        .messages({
+            'string.min': 'Alert title must be at least 3 characters long',
+            'string.max': 'Alert title must be less than 255 characters',
+            'any.required': 'Alert title is required'
+        }),
+    description: Joi.string()
+        .min(10)
+        .max(1000)
+        .required()
+        .messages({
+            'string.min': 'Description must be at least 10 characters long',
+            'string.max': 'Description must be less than 1000 characters',
+            'any.required': 'Alert description is required'
+        }),
+    severity: Joi.string()
+        .valid('info', 'warning', 'error', 'critical')
+        .required()
+        .messages({
+            'any.only': 'Severity must be one of: info, warning, error, critical',
+            'any.required': 'Severity is required'
+        }),
+    alertType: Joi.string()
+        .valid('system', 'equipment', 'safety', 'environmental', 'operational', 'maintenance', 'security')
+        .required()
+        .messages({
+            'any.only': 'Alert type must be one of: system, equipment, safety, environmental, operational, maintenance, security',
+            'any.required': 'Alert type is required'
+        }),
+    source: Joi.string()
+        .min(2)
+        .max(255)
+        .required()
+        .messages({
+            'string.min': 'Source must be at least 2 characters long',
+            'string.max': 'Source must be less than 255 characters',
+            'any.required': 'Alert source is required'
+        }),
+    equipment: Joi.string()
+        .min(2)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Equipment name must be at least 2 characters long',
+            'string.max': 'Equipment name must be less than 255 characters'
+        }),
+    instrument: Joi.string()
+        .min(2)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Instrument name must be at least 2 characters long',
+            'string.max': 'Instrument name must be less than 255 characters'
+        }),
+    threshold: Joi.object({
+        value: Joi.number().required(),
+        unit: Joi.string().max(20).required(),
+        condition: Joi.string().valid('greater_than', 'less_than', 'equal_to', 'not_equal_to').required()
+    }).optional(),
+    priority: Joi.string()
+        .valid('low', 'medium', 'high', 'urgent')
+        .default('medium')
+        .messages({
+            'any.only': 'Priority must be one of: low, medium, high, urgent'
+        })
+}).options({ stripUnknown: true });
+
+export const updateAlertValidationSchema = Joi.object({
+    title: Joi.string()
+        .min(3)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Alert title must be at least 3 characters long',
+            'string.max': 'Alert title must be less than 255 characters'
+        }),
+    description: Joi.string()
+        .min(10)
+        .max(1000)
+        .optional()
+        .messages({
+            'string.min': 'Description must be at least 10 characters long',
+            'string.max': 'Description must be less than 1000 characters'
+        }),
+    severity: Joi.string()
+        .valid('info', 'warning', 'error', 'critical')
+        .optional()
+        .messages({
+            'any.only': 'Severity must be one of: info, warning, error, critical'
+        }),
+    status: Joi.string()
+        .valid('active', 'acknowledged', 'resolved')
+        .optional()
+        .messages({
+            'any.only': 'Status must be one of: active, acknowledged, resolved'
+        }),
+    alertType: Joi.string()
+        .valid('system', 'equipment', 'safety', 'environmental', 'operational', 'maintenance', 'security')
+        .optional()
+        .messages({
+            'any.only': 'Alert type must be one of: system, equipment, safety, environmental, operational, maintenance, security'
+        }),
+    source: Joi.string()
+        .min(2)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Source must be at least 2 characters long',
+            'string.max': 'Source must be less than 255 characters'
+        }),
+    equipment: Joi.string()
+        .min(2)
+        .max(255)
+        .allow(null, '')
+        .optional()
+        .messages({
+            'string.min': 'Equipment name must be at least 2 characters long',
+            'string.max': 'Equipment name must be less than 255 characters'
+        }),
+    instrument: Joi.string()
+        .min(2)
+        .max(255)
+        .allow(null, '')
+        .optional()
+        .messages({
+            'string.min': 'Instrument name must be at least 2 characters long',
+            'string.max': 'Instrument name must be less than 255 characters'
+        }),
+    threshold: Joi.object({
+        value: Joi.number().required(),
+        unit: Joi.string().max(20).required(),
+        condition: Joi.string().valid('greater_than', 'less_than', 'equal_to', 'not_equal_to').required()
+    }).allow(null).optional(),
+    priority: Joi.string()
+        .valid('low', 'medium', 'high', 'urgent')
+        .optional()
+        .messages({
+            'any.only': 'Priority must be one of: low, medium, high, urgent'
+        })
+}).options({ stripUnknown: true });
+
+export const acknowledgeAlertValidationSchema = Joi.object({
+    acknowledgmentNote: Joi.string()
+        .max(500)
+        .optional()
+        .messages({
+            'string.max': 'Acknowledgment note must be less than 500 characters'
+        })
+}).options({ stripUnknown: true });
+
+export const alertFilterValidationSchema = Joi.object({
+    severity: Joi.string()
+        .valid('info', 'warning', 'error', 'critical')
+        .optional()
+        .messages({
+            'any.only': 'Severity must be one of: info, warning, error, critical'
+        }),
+    status: Joi.string()
+        .valid('active', 'acknowledged', 'resolved')
+        .optional()
+        .messages({
+            'any.only': 'Status must be one of: active, acknowledged, resolved'
+        }),
+    alertType: Joi.string()
+        .valid('system', 'equipment', 'safety', 'environmental', 'operational', 'maintenance', 'security')
+        .optional()
+        .messages({
+            'any.only': 'Alert type must be valid'
+        }),
+    instrument: Joi.string()
+        .min(1)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Instrument filter must be at least 1 character',
+            'string.max': 'Instrument filter must be less than 255 characters'
+        }),
+    equipment: Joi.string()
+        .min(1)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Equipment filter must be at least 1 character',
+            'string.max': 'Equipment filter must be less than 255 characters'
+        }),
+    source: Joi.string()
+        .min(1)
+        .max(255)
+        .optional()
+        .messages({
+            'string.min': 'Source filter must be at least 1 character',
+            'string.max': 'Source filter must be less than 255 characters'
+        }),
+    startDate: Joi.date()
+        .optional()
+        .messages({
+            'date.base': 'Start date must be a valid date'
+        }),
+    endDate: Joi.date()
+        .min(Joi.ref('startDate'))
+        .optional()
+        .messages({
+            'date.base': 'End date must be a valid date',
+            'date.min': 'End date must be after start date'
+        }),
+    page: Joi.number()
+        .integer()
+        .min(1)
+        .default(1)
+        .messages({
+            'number.base': 'Page must be a number',
+            'number.integer': 'Page must be an integer',
+            'number.min': 'Page must be at least 1'
+        }),
+    limit: Joi.number()
+        .integer()
+        .min(1)
+        .max(100)
+        .default(10)
+        .messages({
+            'number.base': 'Limit must be a number',
+            'number.integer': 'Limit must be an integer',
+            'number.min': 'Limit must be at least 1',
+            'number.max': 'Limit must be at most 100'
+        })
+}).options({ stripUnknown: true });
+
+export const bulkAcknowledgeAlertsValidationSchema = Joi.object({
+    alertIds: Joi.array()
+        .items(
+            Joi.string()
+                .pattern(/^[0-9a-fA-F]{24}$/)
+                .messages({
+                    'string.pattern.base': 'Each alert ID must be a valid MongoDB ObjectId'
+                })
+        )
+        .min(1)
+        .max(50)
+        .unique()
+        .required()
+        .messages({
+            'array.min': 'At least 1 alert ID is required',
+            'array.max': 'Cannot acknowledge more than 50 alerts at once',
+            'array.unique': 'Alert IDs must be unique',
+            'any.required': 'Alert IDs are required'
+        }),
+    acknowledgmentNote: Joi.string()
+        .max(500)
+        .optional()
+        .messages({
+            'string.max': 'Acknowledgment note must be less than 500 characters'
+        })
+}).options({ stripUnknown: true });

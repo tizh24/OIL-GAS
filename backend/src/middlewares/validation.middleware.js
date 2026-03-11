@@ -204,3 +204,6 @@ export const commonValidations = {
         limit: Joi.number().integer().min(1).max(100).default(10)
     }
 };
+
+// Alias for validateRequest (for compatibility)
+export const validateRequest = validate;
