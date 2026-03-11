@@ -36,3 +36,8 @@ export const requireRole = (allowedRoles) => {
         next();
     };
 };
+
+// Multiple roles support (alias for requireRole for clarity)
+export const requireRoles = (allowedRoles) => {
+    return requireRole(allowedRoles);
+};
