@@ -43,5 +43,16 @@ const options = {
 const swaggerSpec = swaggerJsdoc(options);
 
 export const swaggerDocs = (app) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+    // Setup swagger middleware for both /api-docs and /api-docs/
+    app.use('/api-docs', swaggerUi.serve);
+    app.get('/api-docs', swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+        customCss: '.swagger-ui .topbar { display: none }'
+    }));
+    app.get('/api-docs/', swaggerUi.setup(swaggerSpec, {
+        explorer: true,
+        customCss: '.swagger-ui .topbar { display: none }'
+    }));
+
 };
