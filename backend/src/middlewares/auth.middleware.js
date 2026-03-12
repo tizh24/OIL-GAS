@@ -1,43 +1,28 @@
 import jwt from "jsonwebtoken";
+import { error as errorResponse } from "../utils/response.js";
+import { allowRoles } from "./role.middleware.js";
 
 export const protect = (req, res, next) => {
     const auth = req.headers.authorization;
-    if (!auth) return res.status(401).json({ message: "No token" });
+    if (!auth) return errorResponse(res, 401, "No token");
 
     try {
         const token = auth.split(" ")[1];
         req.user = jwt.verify(token, process.env.JWT_SECRET);
         next();
-    } catch {
-        res.status(401).json({ message: "Invalid token" });
+    } catch (err) {
+        return errorResponse(res, 401, "Invalid token");
     }
 };
 
 // Alias for consistency across the application
 export const authenticateToken = protect;
 
-// Role-based access control middleware
+// Delegate role-based middleware to centralized allowRoles
 export const requireRole = (allowedRoles) => {
-    return (req, res, next) => {
-        if (!req.user) {
-            return res.status(401).json({
-                success: false,
-                message: "Authentication required"
-            });
-        }
-
-        if (!allowedRoles.includes(req.user.role)) {
-            return res.status(403).json({
-                success: false,
-                message: "Access denied. Insufficient permissions."
-            });
-        }
-
-        next();
-    };
+    return allowRoles(allowedRoles);
 };
 
-// Multiple roles support (alias for requireRole for clarity)
 export const requireRoles = (allowedRoles) => {
-    return requireRole(allowedRoles);
+    return allowRoles(allowedRoles);
 };

@@ -49,20 +49,47 @@ export const getUsers = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
     try {
-        const { includeDeleted } = req.query;
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const skip = (page - 1) * limit;
+        // By default return ALL users (active + inactive) per API intent
+        // includeDeleted query can force excluding deleted users when set to 'false'
+        const includeDeleted = req.query.includeDeleted === 'false' ? false : true;
 
-        let query = {};
+        // Optional status filter: 'active' or 'inactive'
+        const statusFilter = req.query.status;
 
-        // Include or exclude deleted users
-        if (includeDeleted !== 'true') {
-            query.deletedAt = null; // Only non-deleted users
+        const query = {};
+        if (!includeDeleted) {
+            query.deletedAt = null;
         }
 
-        const users = await User.find(query)
-            .select('-password')
-            .populate('deletedBy', 'name email userCode');
+        if (statusFilter === 'active') {
+            query.deletedAt = null;
+        } else if (statusFilter === 'inactive') {
+            query.deletedAt = { $ne: null };
+        }
 
-        return success(res, "All users retrieved successfully", users);
+        const [users, totalUsers] = await Promise.all([
+            User.find(query)
+                .select('-password')
+                .populate('deletedBy', 'name email userCode')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            User.countDocuments(query)
+        ]);
+
+        return success(res, "All users retrieved successfully", {
+            users,
+            pagination: {
+                totalItems: totalUsers,
+                totalPages: Math.ceil(totalUsers / limit),
+                currentPage: page,
+                limit,
+            },
+        });
     } catch (err) {
         console.error("Get all users error:", err);
         return error(res, 500, "Failed to retrieve all users", err.message);
@@ -294,11 +321,32 @@ export const restoreUser = async (req, res) => {
 
 export const getDeletedUsers = async (req, res) => {
     try {
-        const deletedUsers = await User.findDeleted()
-            .select('-password')
-            .populate('deletedBy', 'name email userCode');
+        const page = Math.max(1, parseInt(req.query.page) || 1);
+        const limit = Math.max(1, parseInt(req.query.limit) || 10);
+        const skip = (page - 1) * limit;
 
-        return success(res, "Deleted users retrieved successfully", deletedUsers);
+        const query = { deletedAt: { $ne: null } };
+
+        const [deletedUsers, total] = await Promise.all([
+            User.find(query)
+                .select('-password')
+                .populate('deletedBy', 'name email userCode')
+                .sort({ deletedAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            User.countDocuments(query)
+        ]);
+
+        return success(res, "Deleted users retrieved successfully", {
+            users: deletedUsers,
+            pagination: {
+                totalItems: total,
+                totalPages: Math.ceil(total / limit),
+                currentPage: page,
+                limit,
+            }
+        });
     } catch (err) {
         console.error("Get deleted users error:", err);
         return error(res, 500, "Failed to retrieve deleted users", err.message);

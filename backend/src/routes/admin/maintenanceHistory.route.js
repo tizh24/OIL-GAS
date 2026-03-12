@@ -12,8 +12,7 @@ router.use(protect, allowRoles(["admin", "super_admin"]));
 
 router.get("/", getMaintenanceHistory);
 router.get("/:id", getMaintenanceById);
-router.post("/", createMaintenance);
-router.put("/:id", updateMaintenance);
-router.delete("/:id", deleteMaintenance);
+
+// Remove create/update/delete for admin per policy (engineers create records)
 
 export default router;

@@ -3,17 +3,14 @@ import {
     getAllMaintenance,
     getMaintenanceById,
     getByTargetId,
-    createMaintenance,
-    updateMaintenance,
     deleteMaintenance
 } from "../../controllers/admin/maintenance.controller.js";
 import { protect } from "../../middlewares/auth.middleware.js";
 import { allowRoles } from "../../middlewares/role.middleware.js";
-import { validateRequest } from "../../middlewares/validation.middleware.js";
-import { createMaintenanceValidationSchema, updateMaintenanceValidationSchema } from "../../utils/validation.js";
 
 const router = express.Router();
 
+// Admin routes: read-only and management of maintenance records (no create by admin)
 router.use(protect, allowRoles(["admin", "super_admin"]));
 
 /**
@@ -47,6 +44,19 @@ router.use(protect, allowRoles(["admin", "super_admin"]));
  *         description: Maintenance records retrieved
  */
 router.get("/", getAllMaintenance);
+
+/**
+ * @swagger
+ * /api/admin/maintenance:
+ *   post:
+ *     tags: [Admin Maintenance]
+ *     summary: Create maintenance record (DEPRECATED - Admins not allowed)
+ *     description: "Deprecated. Maintenance creation is restricted to Engineers. Admins should NOT call this endpoint. Use POST /api/engineer/instruments/{id}/maintenance with Engineer role instead."
+ *     security: [{bearerAuth: []}]
+ *     responses:
+ *       403:
+ *         description: Forbidden - Admins are not allowed to create maintenance records
+ */
 
 /**
  * @swagger
@@ -86,39 +96,11 @@ router.get("/:id", getMaintenanceById);
 
 /**
  * @swagger
- * /api/admin/maintenance:
- *   post:
- *     tags: [Admin Maintenance]
- *     summary: Create maintenance record
- *     security: [{bearerAuth: []}]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [equipment, type, scheduledDate, engineerId, description]
- *             properties:
- *               equipment: {type: string}
- *               type: {type: string, enum: [preventive, corrective, predictive, emergency, inspection, calibration]}
- *               priority: {type: string, enum: [low, medium, high, critical]}
- *               scheduledDate: {type: string, format: date}
- *               estimatedHours: {type: number}
- *               engineerId: {type: string}
- *               supervisorId: {type: string}
- *               description: {type: string}
- *     responses:
- *       200:
- *         description: Record created
- */
-router.post("/", validateRequest(createMaintenanceValidationSchema), createMaintenance);
-
-/**
- * @swagger
  * /api/admin/maintenance/{id}:
  *   put:
  *     tags: [Admin Maintenance]
- *     summary: Update maintenance record
+ *     summary: Update maintenance record (DEPRECATED - Admins not allowed)
+ *     description: "Deprecated. Maintenance updates are performed via Engineer workflows. Admins should not modify maintenance records."
  *     security: [{bearerAuth: []}]
  *     parameters:
  *       - in: path
@@ -126,10 +108,9 @@ router.post("/", validateRequest(createMaintenanceValidationSchema), createMaint
  *         required: true
  *         schema: {type: string}
  *     responses:
- *       200:
- *         description: Record updated
+ *       403:
+ *         description: Forbidden - Admins are not allowed to update maintenance records
  */
-router.put("/:id", validateRequest(updateMaintenanceValidationSchema), updateMaintenance);
 
 /**
  * @swagger

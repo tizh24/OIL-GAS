@@ -118,17 +118,73 @@ const router = express.Router();
  *   get:
  *     tags:
  *       - Admins
- *     summary: Get all active users
- *     description: Retrieve a list of all active users only (requires authentication)
+ *     summary: Get active users (paginated)
+ *     description: Retrieve a paginated list of active users only. Supports search and optional inclusion of deleted users.
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *           minimum: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *           minimum: 1
+ *           maximum: 100
+ *         description: Number of users per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by user name or email (case-insensitive)
+ *       - in: query
+ *         name: includeDeleted
+ *         schema:
+ *           type: boolean
+ *           default: false
+ *         description: Include soft-deleted users when true
  *     responses:
  *       200:
  *         description: Users retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/UsersResponse'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Users retrieved successfully"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     users:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/User'
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         totalItems:
+ *                           type: integer
+ *                           example: 25
+ *                         totalPages:
+ *                           type: integer
+ *                           example: 3
+ *                         currentPage:
+ *                           type: integer
+ *                           example: 1
+ *                         limit:
+ *                           type: integer
+ *                           example: 10
  *       401:
  *         description: Unauthorized - Invalid or missing token
  *       500:
@@ -176,17 +232,20 @@ router.post("/", protect, allowRoles('admin'), sanitize(['name', 'email']), vali
  *   get:
  *     tags:
  *       - Admins
- *     summary: Get all deleted users
- *     description: Retrieve a list of all soft-deleted users (admin only)
+ *     summary: Get deleted users (paginated)
+ *     description: Retrieve paginated list of soft-deleted users.
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
  *     responses:
  *       200:
  *         description: Deleted users retrieved successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/UsersResponse'
  *       401:
  *         description: Unauthorized - Invalid or missing token
  *       403:
@@ -202,13 +261,28 @@ router.get("/deleted", protect, allowRoles('admin'), getDeletedUsers);
  *   get:
  *     tags:
  *       - Admins
- *     summary: Get all users (active and inactive)
- *     description: Retrieve a list of all users regardless of status (admin only)
+ *     summary: Get all users (with pagination)
+ *     description: Retrieve a paginated list of users. By default returns all users (active + inactive). Use `includeDeleted=false` to exclude deleted users. Use `status=active|inactive` to filter by status.
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 10 }
+ *       - in: query
+ *         name: includeDeleted
+ *         schema: { type: boolean }
+ *         description: When false only non-deleted users will be returned
+ *       - in: query
+ *         name: status
+ *         schema: { type: string, enum: [active, inactive] }
+ *         description: Filter by user active/inactive status
  *     responses:
  *       200:
- *         description: All users retrieved successfully
+ *         description: Users retrieved successfully
  *         content:
  *           application/json:
  *             schema:

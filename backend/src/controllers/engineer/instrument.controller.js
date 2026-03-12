@@ -1,6 +1,7 @@
 import Instrument from "../../models/engineer/instrument.model.js";
 import MaintenanceRecord from "../../models/engineer/maintenanceRecord.model.js";
 import { success, error } from "../../utils/response.js";
+import { logAudit } from "../../utils/audit.js";
 
 // Get instrument list with filters and pagination
 export const getInstrumentList = async (req, res) => {
@@ -157,6 +158,10 @@ export const getInstrumentInfo = async (req, res) => {
 // Create maintenance schedule for instrument
 export const scheduleInstrumentMaintenance = async (req, res) => {
     try {
+        if (!req.user || req.user.role !== 'engineer') {
+            return error(res, 403, 'Only engineers can schedule maintenance');
+        }
+
         const { id } = req.params;
         const { type, description, startDate, estimatedHours, priority = "medium" } = req.body;
 
@@ -238,14 +243,15 @@ export const scheduleInstrumentMaintenance = async (req, res) => {
             .populate('engineerId', 'name email department')
             .populate('equipment', 'name type serial model location');
 
-        // TODO: Add audit log here
-        // auditLog.create({
-        //     action: 'CREATE_MAINTENANCE_SCHEDULE',
-        //     resourceType: 'MaintenanceRecord',
-        //     resourceId: maintenanceRecord._id,
-        //     userId: req.user.userId,
-        //     details: { instrumentId: id, type, scheduledDate }
-        // });
+        // Add audit log here
+        await logAudit({
+            action: "CREATE",
+            entity: "Maintenance",
+            entityId: populatedRecord._id,
+            performedBy: req.user.userId,
+            after: populatedRecord.toObject(),
+            req
+        });
 
         return success(res, "Maintenance scheduled successfully", populatedRecord);
     } catch (err) {

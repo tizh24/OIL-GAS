@@ -191,8 +191,8 @@ router.get("/:id/info", authenticateToken, requireRole(["engineer", "supervisor"
  *   post:
  *     tags:
  *       - Engineer Instruments
- *     summary: Schedule maintenance for an instrument
- *     description: Create a new maintenance schedule for a specific instrument
+ *     summary: Schedule maintenance for an instrument (Engineer only)
+ *     description: Create a new maintenance schedule for a specific instrument. Requires Engineer role (bearer token with role=engineer).
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -212,52 +212,26 @@ router.get("/:id/info", authenticateToken, requireRole(["engineer", "supervisor"
  *               type:
  *                 type: string
  *                 enum: [preventive, corrective, predictive, emergency, inspection, calibration]
- *                 description: Type of maintenance
  *               description:
  *                 type: string
- *                 description: Description of maintenance work
  *               startDate:
  *                 type: string
  *                 format: date-time
- *                 description: Scheduled start date and time
  *               estimatedHours:
  *                 type: number
- *                 description: Estimated hours for completion
- *                 default: 4
  *               priority:
  *                 type: string
  *                 enum: [low, medium, high, critical]
- *                 default: medium
- *             required:
- *               - type
- *               - description
- *               - startDate
- *           example:
- *             type: "preventive"
- *             description: "Regular calibration and sensor cleaning"
- *             startDate: "2026-03-15T09:00:00.000Z"
- *             estimatedHours: 4
- *             priority: "medium"
+ *             required: [type, description, startDate]
  *     responses:
  *       200:
  *         description: Maintenance scheduled successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
+ *       403:
+ *         description: Forbidden - Engineer role required
  *       400:
  *         description: Bad Request
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Forbidden
  *       404:
  *         description: Not Found
  *       409:
@@ -265,6 +239,6 @@ router.get("/:id/info", authenticateToken, requireRole(["engineer", "supervisor"
  *       500:
  *         description: Internal Server Error
  */
-router.post("/:id/maintenance", authenticateToken, requireRole(["engineer", "supervisor", "admin"]), scheduleInstrumentMaintenance);
+router.post("/:id/maintenance", authenticateToken, requireRole(["engineer"]), scheduleInstrumentMaintenance);
 
 export default router;

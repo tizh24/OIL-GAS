@@ -155,7 +155,7 @@ export const updateUserValidationSchema = Joi.object({
         }),
     phone: phoneRules,
     department: departmentRules,
-    role: roleRules.optional(),
+    // role removed to prevent role updates via this endpoint
     status: Joi.string()
         .valid('active', 'inactive')
         .optional()

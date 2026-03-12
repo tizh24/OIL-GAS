@@ -76,80 +76,12 @@ export const getByTargetId = async (req, res) => {
 
 // POST /api/admin/maintenance
 export const createMaintenance = async (req, res) => {
-    try {
-        const {
-            equipment, type, priority, scheduledDate, estimatedHours,
-            engineerId, supervisorId, description, partsUsed
-        } = req.body;
-
-        if (!equipment || !type || !scheduledDate || !engineerId || !description) {
-            return error(res, 400, "equipment, type, scheduledDate, engineerId, description are required");
-        }
-
-        const record = await MaintenanceRecord.create({
-            equipment, type,
-            priority: priority || "medium",
-            scheduledDate, estimatedHours,
-            engineerId, supervisorId,
-            description, partsUsed,
-            status: "scheduled",
-            createdBy: req.user.userId
-        });
-
-        await record.populate("equipment engineerId", "name email serial");
-
-        await logAudit({
-            action:      "CREATE",
-            entity:      "Maintenance",
-            entityId:    record._id,
-            performedBy: req.user.userId,
-            after:       record.toObject(),
-            req
-        });
-
-        return success(res, "Maintenance record created successfully", record);
-    } catch (err) {
-        return error(res, 500, "Failed to create maintenance record", err.message);
-    }
+    return error(res, 403, "Admins are not allowed to create maintenance records. Use engineer endpoints.");
 };
 
 // PUT /api/admin/maintenance/:id
 export const updateMaintenance = async (req, res) => {
-    try {
-        const { id } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(id)) return error(res, 400, "Invalid record ID");
-
-        const record = await MaintenanceRecord.findOne({ _id: id, deletedAt: null });
-        if (!record) return error(res, 404, "Maintenance record not found");
-
-        const before = record.toObject();
-
-        const allowed = [
-            "type", "status", "priority", "scheduledDate", "startDate", "completedDate",
-            "estimatedHours", "actualHours", "engineerId", "supervisorId", "description",
-            "workPerformed", "partsUsed", "findings", "cost", "notes", "nextMaintenanceDate"
-        ];
-        allowed.forEach(field => {
-            if (req.body[field] !== undefined) record[field] = req.body[field];
-        });
-
-        record.updatedBy = req.user.userId;
-        await record.save();
-
-        await logAudit({
-            action:      "UPDATE",
-            entity:      "Maintenance",
-            entityId:    record._id,
-            performedBy: req.user.userId,
-            before,
-            after:       record.toObject(),
-            req
-        });
-
-        return success(res, "Maintenance record updated successfully", record);
-    } catch (err) {
-        return error(res, 500, "Failed to update maintenance record", err.message);
-    }
+    return error(res, 403, "Admins are not allowed to update maintenance records. Use engineer endpoints.");
 };
 
 // DELETE /api/admin/maintenance/:id  (soft delete)
@@ -171,12 +103,12 @@ export const deleteMaintenance = async (req, res) => {
         await record.softDelete(req.user.userId);
 
         await logAudit({
-            action:      "DELETE",
-            entity:      "Maintenance",
-            entityId:    record._id,
+            action: "DELETE",
+            entity: "Maintenance",
+            entityId: record._id,
             performedBy: req.user.userId,
             before,
-            reason:      reason || null,
+            reason: reason || null,
             req
         });
 

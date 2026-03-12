@@ -15,7 +15,8 @@ router.use(protect, allowRoles(["admin", "super_admin"]));
  * /api/admin/audit-logs:
  *   get:
  *     tags: [Admin Audit Logs]
- *     summary: Get all audit logs with filters and pagination
+ *     summary: Get audit logs (paginated)
+ *     description: Retrieve paginated audit logs with filtering options
  *     security: [{bearerAuth: []}]
  *     parameters:
  *       - in: query
@@ -27,25 +28,25 @@ router.use(protect, allowRoles(["admin", "super_admin"]));
  *         schema: {type: integer, default: 20, maximum: 100}
  *         description: Items per page
  *       - in: query
- *         name: entity
- *         schema: {type: string}
- *         description: Filter by entity (User, Equipment, Warehouse, etc.)
- *       - in: query
  *         name: action
  *         schema: {type: string}
- *         description: Filter by action (CREATE, UPDATE, DELETE, etc.)
+ *         description: Filter by action type
+ *       - in: query
+ *         name: resourceType
+ *         schema: {type: string}
+ *         description: Filter by resource type
  *       - in: query
  *         name: performedBy
  *         schema: {type: string}
- *         description: Filter by user ID who performed the action
+ *         description: Filter by user ID
  *       - in: query
- *         name: from
- *         schema: {type: string, format: date-time}
- *         description: Filter logs from this date
+ *         name: startDate
+ *         schema: {type: string, format: date}
+ *         description: Filter from date
  *       - in: query
- *         name: to
- *         schema: {type: string, format: date-time}
- *         description: Filter logs to this date
+ *         name: endDate
+ *         schema: {type: string, format: date}
+ *         description: Filter to date
  *     responses:
  *       200:
  *         description: Audit logs retrieved successfully
@@ -54,26 +55,15 @@ router.use(protect, allowRoles(["admin", "super_admin"]));
  *             schema:
  *               type: object
  *               properties:
- *                 success: {type: boolean}
- *                 message: {type: string}
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
  *                 data:
  *                   type: object
  *                   properties:
  *                     logs:
  *                       type: array
- *                       items:
- *                         type: object
- *                         properties:
- *                           _id: {type: string}
- *                           entity: {type: string}
- *                           entityId: {type: string}
- *                           action: {type: string}
- *                           performedBy: {type: object}
- *                           before: {type: object}
- *                           after: {type: object}
- *                           ipAddress: {type: string}
- *                           userAgent: {type: string}
- *                           createdAt: {type: string, format: date-time}
  *                     pagination:
  *                       type: object
  *                       properties:
