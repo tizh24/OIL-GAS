@@ -9,6 +9,7 @@ import threeDRoutes from "./routes/engineer/3d.routes.js";
 import incidentRoutes from "./routes/engineer/incident.route.js";
 import sensorRoutes from "./routes/engineer/sensor.routes.js";
 import reportRoutes from "./routes/engineer/report.routes.js";
+import adminRoutes from "./routes/admin/index.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use("/api/engineer/reports", reportRoutes);
 app.use("/api/engineer", incidentRoutes);
 app.use("/api/3d", threeDRoutes);
 app.use("/api/control", threeDRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Setup Swagger documentation BEFORE 404 handlers
 swaggerDocs(app);

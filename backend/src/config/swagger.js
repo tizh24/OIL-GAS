@@ -33,10 +33,10 @@ const options = {
                 }
             }
         }
-    },
-    apis: [
+    }, apis: [
         path.join(__dirname, "../routes/*.js"),
-        path.join(__dirname, "../routes/engineer/*.js")
+        path.join(__dirname, "../routes/engineer/*.js"),
+        path.join(__dirname, "../routes/admin/*.js")
     ]
 };
 

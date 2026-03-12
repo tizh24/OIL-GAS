@@ -797,3 +797,389 @@ export const bulkAcknowledgeAlertsValidationSchema = Joi.object({
             'string.max': 'Acknowledgment note must be less than 500 characters'
         })
 }).options({ stripUnknown: true });
+
+// ==================== ADMIN VALIDATION SCHEMAS ====================
+
+// Admin Management Validation Schemas
+export const createAdminValidationSchema = Joi.object({
+    username: Joi.string()
+        .min(3)
+        .max(30)
+        .pattern(/^[a-zA-Z0-9_]+$/)
+        .required()
+        .messages({
+            'string.min': 'Username must be at least 3 characters long',
+            'string.max': 'Username cannot exceed 30 characters',
+            'string.pattern.base': 'Username can only contain letters, numbers, and underscores',
+            'any.required': 'Username is required'
+        }),
+    email: emailRules,
+    password: passwordRules.required(),
+    confirmPassword: Joi.string()
+        .valid(Joi.ref('password'))
+        .required()
+        .messages({
+            'any.only': 'Confirm password must match password',
+            'any.required': 'Confirm password is required'
+        }),
+    role: Joi.string()
+        .valid('admin', 'super_admin')
+        .default('admin')
+        .messages({
+            'any.only': 'Role must be either admin or super_admin'
+        })
+}).options({ stripUnknown: true });
+
+export const updateAdminValidationSchema = Joi.object({
+    username: Joi.string()
+        .min(3)
+        .max(30)
+        .pattern(/^[a-zA-Z0-9_]+$/)
+        .optional()
+        .messages({
+            'string.min': 'Username must be at least 3 characters long',
+            'string.max': 'Username cannot exceed 30 characters',
+            'string.pattern.base': 'Username can only contain letters, numbers, and underscores'
+        }),
+    email: emailRules.optional(),
+    password: passwordRules.optional(),
+    role: Joi.string()
+        .valid('admin', 'super_admin')
+        .optional()
+        .messages({
+            'any.only': 'Role must be either admin or super_admin'
+        })
+}).options({ stripUnknown: true });
+
+export const adminLoginValidationSchema = Joi.object({
+    email: emailRules,
+    password: Joi.string()
+        .required()
+        .messages({
+            'any.required': 'Password is required',
+            'string.empty': 'Password cannot be empty'
+        })
+}).options({ stripUnknown: true });
+
+// Equipment Management Validation Schemas (Admin)
+export const createEquipmentValidationSchema = Joi.object({
+    name: Joi.string()
+        .min(2)
+        .max(100)
+        .required()
+        .messages({
+            'string.min': 'Equipment name must be at least 2 characters long',
+            'string.max': 'Equipment name cannot exceed 100 characters',
+            'any.required': 'Equipment name is required'
+        }),
+    type: Joi.string()
+        .valid('drilling', 'pumping', 'safety', 'measurement', 'transportation', 'other')
+        .required()
+        .messages({
+            'any.only': 'Type must be one of: drilling, pumping, safety, measurement, transportation, other',
+            'any.required': 'Equipment type is required'
+        }),
+    serial: Joi.string()
+        .min(3)
+        .max(50)
+        .required()
+        .messages({
+            'string.min': 'Serial number must be at least 3 characters long',
+            'string.max': 'Serial number cannot exceed 50 characters',
+            'any.required': 'Serial number is required'
+        }),
+    model: Joi.string()
+        .max(100)
+        .required()
+        .messages({
+            'string.max': 'Model cannot exceed 100 characters',
+            'any.required': 'Model is required'
+        }),
+    manufacturer: Joi.string()
+        .max(100)
+        .required()
+        .messages({
+            'string.max': 'Manufacturer cannot exceed 100 characters',
+            'any.required': 'Manufacturer is required'
+        }),
+    location: Joi.string()
+        .max(200)
+        .required()
+        .messages({
+            'string.max': 'Location cannot exceed 200 characters',
+            'any.required': 'Location is required'
+        }),
+    status: Joi.string()
+        .valid('operational', 'maintenance', 'out-of-service', 'repair', 'inspection')
+        .default('operational')
+        .messages({
+            'any.only': 'Status must be one of: operational, maintenance, out-of-service, repair, inspection'
+        }),
+    purchaseDate: Joi.date().optional(),
+    warrantyExpiry: Joi.date().optional(),
+    nextScheduledMaintenance: Joi.date().optional(),
+    specifications: Joi.object().optional(),
+    description: Joi.string().max(1000).optional()
+}).options({ stripUnknown: true });
+
+export const updateEquipmentValidationSchema = Joi.object({
+    name: Joi.string().min(2).max(100).optional(),
+    type: Joi.string().valid('drilling', 'pumping', 'safety', 'measurement', 'transportation', 'other').optional(),
+    model: Joi.string().max(100).optional(),
+    manufacturer: Joi.string().max(100).optional(),
+    location: Joi.string().max(200).optional(),
+    status: Joi.string().valid('operational', 'maintenance', 'out-of-service', 'repair', 'inspection').optional(),
+    purchaseDate: Joi.date().optional(),
+    warrantyExpiry: Joi.date().optional(),
+    nextScheduledMaintenance: Joi.date().optional(),
+    specifications: Joi.object().optional(),
+    description: Joi.string().max(1000).optional()
+}).options({ stripUnknown: true });
+
+// Warehouse Management Validation Schemas
+export const createWarehouseValidationSchema = Joi.object({
+    name: Joi.string()
+        .min(2)
+        .max(100)
+        .required()
+        .messages({
+            'string.min': 'Warehouse name must be at least 2 characters long',
+            'string.max': 'Warehouse name cannot exceed 100 characters',
+            'any.required': 'Warehouse name is required'
+        }),
+    location: Joi.string()
+        .min(2)
+        .max(200)
+        .required()
+        .messages({
+            'string.min': 'Location must be at least 2 characters long',
+            'string.max': 'Location cannot exceed 200 characters',
+            'any.required': 'Location is required'
+        }),
+    capacity: Joi.number()
+        .positive()
+        .required()
+        .messages({
+            'number.positive': 'Capacity must be a positive number',
+            'any.required': 'Capacity is required'
+        }),
+    description: Joi.string()
+        .max(500)
+        .optional()
+        .messages({
+            'string.max': 'Description cannot exceed 500 characters'
+        })
+}).options({ stripUnknown: true });
+
+export const updateWarehouseValidationSchema = Joi.object({
+    name: Joi.string().min(2).max(100).optional(),
+    location: Joi.string().min(2).max(200).optional(),
+    capacity: Joi.number().positive().optional(),
+    description: Joi.string().max(500).optional()
+}).options({ stripUnknown: true });
+
+export const warehouseInventoryValidationSchema = Joi.object({
+    warehouseId: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Invalid warehouse ID format',
+            'any.required': 'Warehouse ID is required'
+        }),
+    equipmentId: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Invalid equipment ID format'
+        }),
+    quantity: Joi.number()
+        .positive()
+        .required()
+        .messages({
+            'number.positive': 'Quantity must be a positive number',
+            'any.required': 'Quantity is required'
+        }),
+    supplierOrDestination: Joi.string()
+        .min(2)
+        .max(200)
+        .required()
+        .messages({
+            'string.min': 'Supplier/Destination must be at least 2 characters long',
+            'string.max': 'Supplier/Destination cannot exceed 200 characters',
+            'any.required': 'Supplier or Destination is required'
+        }),
+    actionDate: Joi.date().optional(),
+    note: Joi.string().max(500).optional()
+}).options({ stripUnknown: true });
+
+
+
+// Maintenance Management Validation Schemas
+export const createMaintenanceValidationSchema = Joi.object({
+    equipment: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Invalid equipment ID format',
+            'any.required': 'Equipment is required'
+        }),
+    type: Joi.string()
+        .valid('preventive', 'corrective', 'predictive', 'emergency', 'inspection', 'calibration')
+        .required()
+        .messages({
+            'any.only': 'Type must be one of: preventive, corrective, predictive, emergency, inspection, calibration',
+            'any.required': 'Maintenance type is required'
+        }),
+    description: Joi.string()
+        .min(10)
+        .max(1000)
+        .required()
+        .messages({
+            'string.min': 'Description must be at least 10 characters long',
+            'string.max': 'Description cannot exceed 1000 characters',
+            'any.required': 'Description is required'
+        }),
+    scheduledDate: Joi.date()
+        .required()
+        .messages({
+            'any.required': 'Scheduled date is required'
+        }),
+    estimatedHours: Joi.number()
+        .positive()
+        .optional()
+        .messages({
+            'number.positive': 'Estimated hours must be a positive number'
+        }),
+    engineerId: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .required()
+        .messages({
+            'string.pattern.base': 'Invalid engineer ID format',
+            'any.required': 'Engineer ID is required'
+        }),
+    supervisorId: Joi.string()
+        .pattern(/^[0-9a-fA-F]{24}$/)
+        .optional()
+        .messages({
+            'string.pattern.base': 'Invalid supervisor ID format'
+        }),
+    priority: Joi.string()
+        .valid('low', 'medium', 'high', 'critical')
+        .default('medium')
+        .messages({
+            'any.only': 'Priority must be one of: low, medium, high, critical'
+        }),
+    partsUsed: Joi.array().items(Joi.object({
+        name: Joi.string().required(),
+        quantity: Joi.number().positive().required(),
+        cost: Joi.number().positive().optional()
+    })).optional()
+}).options({ stripUnknown: true });
+
+export const updateMaintenanceValidationSchema = Joi.object({
+    type: Joi.string().valid('preventive', 'corrective', 'predictive', 'emergency', 'inspection', 'calibration').optional(),
+    status: Joi.string().valid('scheduled', 'in-progress', 'completed', 'cancelled', 'delayed').optional(),
+    priority: Joi.string().valid('low', 'medium', 'high', 'critical').optional(),
+    scheduledDate: Joi.date().optional(),
+    startDate: Joi.date().optional(),
+    completedDate: Joi.date().optional(),
+    estimatedHours: Joi.number().positive().optional(),
+    actualHours: Joi.number().positive().optional(),
+    engineerId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+    supervisorId: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
+    description: Joi.string().min(10).max(1000).optional(),
+    workPerformed: Joi.string().max(2000).optional(),
+    partsUsed: Joi.array().items(Joi.object({
+        name: Joi.string().required(),
+        quantity: Joi.number().positive().required(),
+        cost: Joi.number().positive().optional()
+    })).optional(),
+    findings: Joi.string().max(1000).optional(),
+    cost: Joi.number().positive().optional(),
+    notes: Joi.string().max(1000).optional(),
+    nextMaintenanceDate: Joi.date().optional()
+}).options({ stripUnknown: true });
+
+// Instrument Management Validation Schemas
+export const createInstrumentValidationSchema = Joi.object({
+    name: Joi.string()
+        .min(2)
+        .max(100)
+        .required()
+        .messages({
+            'string.min': 'Instrument name must be at least 2 characters long',
+            'string.max': 'Instrument name cannot exceed 100 characters',
+            'any.required': 'Instrument name is required'
+        }),
+    type: Joi.string()
+        .valid('pressure', 'temperature', 'flow', 'level', 'ph', 'gas', 'vibration', 'other')
+        .required()
+        .messages({
+            'any.only': 'Type must be one of: pressure, temperature, flow, level, ph, gas, vibration, other',
+            'any.required': 'Instrument type is required'
+        }),
+    model: Joi.string().max(100).required(),
+    manufacturer: Joi.string().max(100).required(),
+    serialNumber: Joi.string().min(3).max(50).required(),
+    location: Joi.string().max(200).required(),
+    unit: Joi.string().max(20).optional(),
+    range: Joi.object({
+        min: Joi.number().required(),
+        max: Joi.number().greater(Joi.ref('min')).required()
+    }).optional(),
+    calibrationDate: Joi.date().optional(),
+    nextCalibrationDate: Joi.date().optional(),
+    status: Joi.string()
+        .valid('active', 'inactive', 'maintenance', 'calibration')
+        .default('active')
+        .messages({
+            'any.only': 'Status must be one of: active, inactive, maintenance, calibration'
+        })
+}).options({ stripUnknown: true });
+
+export const updateInstrumentValidationSchema = Joi.object({
+    name: Joi.string().min(2).max(100).optional(),
+    type: Joi.string().valid('pressure', 'temperature', 'flow', 'level', 'ph', 'gas', 'vibration', 'other').optional(),
+    model: Joi.string().max(100).optional(),
+    manufacturer: Joi.string().max(100).optional(),
+    location: Joi.string().max(200).optional(),
+    unit: Joi.string().max(20).optional(),
+    range: Joi.object({
+        min: Joi.number().required(),
+        max: Joi.number().greater(Joi.ref('min')).required()
+    }).optional(),
+    calibrationDate: Joi.date().optional(),
+    nextCalibrationDate: Joi.date().optional(),
+    status: Joi.string().valid('active', 'inactive', 'maintenance', 'calibration').optional()
+}).options({ stripUnknown: true });
+
+// Role Management Validation Schemas
+export const createRoleValidationSchema = Joi.object({
+    name: Joi.string()
+        .min(2)
+        .max(50)
+        .required()
+        .messages({
+            'string.min': 'Role name must be at least 2 characters long',
+            'string.max': 'Role name cannot exceed 50 characters',
+            'any.required': 'Role name is required'
+        }),
+    description: Joi.string()
+        .max(500)
+        .optional()
+        .messages({
+            'string.max': 'Description cannot exceed 500 characters'
+        }),
+    permissions: Joi.array()
+        .items(Joi.string())
+        .default([])
+        .messages({
+            'array.base': 'Permissions must be an array of strings'
+        })
+}).options({ stripUnknown: true });
+
+export const updateRoleValidationSchema = Joi.object({
+    name: Joi.string().min(2).max(50).optional(),
+    description: Joi.string().max(500).optional(),
+    permissions: Joi.array().items(Joi.string()).optional()
+}).options({ stripUnknown: true });
