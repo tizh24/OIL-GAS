@@ -9,8 +9,7 @@ const oilOutputSchema = new mongoose.Schema({
     },
     recordedAt: {
         type: Date,
-        default: Date.now,
-        index: -1
+        default: Date.now
     },
     productionVolume: {
         value: Number,
@@ -34,6 +33,6 @@ const oilOutputSchema = new mongoose.Schema({
 });
 
 oilOutputSchema.index({ wellId: 1, recordedAt: -1 });
-oilOutputSchema.index({ recordedAt: -1 });
+// removed duplicate single-field index on recordedAt to avoid duplicate index warning
 
 export default mongoose.model('OilOutput', oilOutputSchema);
